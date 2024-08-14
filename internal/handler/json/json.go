@@ -1,14 +1,15 @@
-package handler
+package json
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mroyme/dogstatsd-local/internal/handler"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"log"
 	"os"
 )
 
-func NewJSONMessageHandler(extraTags []string) MessageHandler {
+func NewHandler(extraTags []string) handler.MessageHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
