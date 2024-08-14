@@ -1,21 +1,21 @@
-package handler
+package pretty
 
 import (
 	"fmt"
 	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mroyme/dogstatsd-local/internal/handler"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"log"
 	"strings"
 )
 
-var theme = catppuccin.Mocha
-
-func Color(catppuccinColor catppuccin.Color) lipgloss.Color {
-	return lipgloss.Color(catppuccinColor.Hex)
+var theme = CatppuccinAdaptiveTheme{
+	light: catppuccin.Latte,
+	dark:  catppuccin.Mocha,
 }
 
-func NewPrettyMessageHandler(extraTags []string, nameWidth int, valueWidth int) MessageHandler {
+func NewHandler(extraTags []string, nameWidth int, valueWidth int) handler.MessageHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
@@ -37,7 +37,7 @@ func NewPrettyMessageHandler(extraTags []string, nameWidth int, valueWidth int) 
 }
 
 func styledMetricType(metric messages.DogStatsDMetric) string {
-	var fg catppuccin.Color
+	var fg lipgloss.AdaptiveColor
 	metricType := metric.MetricType
 	switch metricType {
 	case messages.CounterMetricType:
@@ -55,8 +55,7 @@ func styledMetricType(metric messages.DogStatsDMetric) string {
 	}
 	style := lipgloss.NewStyle().
 		Width(11).
-		Background(Color(theme.Base())).
-		Foreground(Color(fg))
+		Foreground(fg)
 	return style.Render(strings.ToUpper(metricType.String()))
 }
 
@@ -68,8 +67,7 @@ func styledMetricName(metric messages.DogStatsDMetric, width int) string {
 	style := lipgloss.NewStyle().
 		Width(50).
 		MaxWidth(50).
-		Background(Color(theme.Base())).
-		Foreground(Color(theme.Lavender()))
+		Foreground(theme.Lavender())
 	return style.Render(text)
 }
 
@@ -81,8 +79,7 @@ func styledMetricValue(metric messages.DogStatsDMetric, width int) string {
 	style := lipgloss.NewStyle().
 		Width(15).
 		MaxWidth(15).
-		Background(Color(theme.Base())).
-		Foreground(Color(theme.Sapphire()))
+		Foreground(theme.Sapphire())
 	if metric.MetricType == messages.TimerMetricType {
 		value += "ms"
 	}
@@ -91,12 +88,11 @@ func styledMetricValue(metric messages.DogStatsDMetric, width int) string {
 
 func styledTags(metric messages.DogStatsDMetric, extraTags []string) string {
 	style := lipgloss.NewStyle().
-		Background(Color(theme.Base())).
-		Foreground(Color(theme.Subtext0()))
+		Foreground(theme.Subtext0())
 	var tags []string
 	for _, tag := range append(extraTags, metric.Tags...) {
 		tags = append(tags, strings.TrimSpace(tag))
 	}
-	prefix := style.Foreground(Color(theme.Overlay0())).Render("TAGS =")
+	prefix := style.Foreground(theme.Overlay0()).Render("TAGS =")
 	return prefix + style.SetString(tags...).Render()
 }

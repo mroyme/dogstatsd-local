@@ -1,12 +1,13 @@
-package handler
+package short
 
 import (
 	"fmt"
+	"github.com/mroyme/dogstatsd-local/internal/handler"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"log"
 )
 
-func NewShortMessageHandler(extraTags []string) MessageHandler {
+func NewHandler(extraTags []string) handler.MessageHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
