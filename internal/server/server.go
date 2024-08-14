@@ -1,18 +1,21 @@
-package main
+package server
 
 import (
+	"errors"
 	"log"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/mroyme/dogstatsd-local/internal/handler"
 )
 
-type server interface {
-	listen() error
-	stop() error
+type Server interface {
+	Listen() error
+	Stop() error
 }
 
-func newServer(addr string, fn msgHandler) server {
+func NewServer(addr string, fn handler.MsgHandler) Server {
 	return &udpServer{
 		msgHandler:    fn,
 		rawAddr:       addr,
@@ -25,7 +28,7 @@ func newServer(addr string, fn msgHandler) server {
 }
 
 type udpServer struct {
-	msgHandler msgHandler
+	msgHandler handler.MsgHandler
 	rawAddr    string
 
 	readDeadline  time.Duration
@@ -37,7 +40,7 @@ type udpServer struct {
 	wg sync.WaitGroup
 }
 
-func (u *udpServer) listen() error {
+func (u *udpServer) Listen() error {
 	addr, err := net.ResolveUDPAddr("udp", u.rawAddr)
 	if err != nil {
 		return err
@@ -52,7 +55,7 @@ func (u *udpServer) listen() error {
 	go u.errHandler()
 
 	buf := make([]byte, 1024)
-	respMsg := []byte{}
+	var respMsg []byte
 
 	for {
 		select {
@@ -61,12 +64,16 @@ func (u *udpServer) listen() error {
 		default:
 		}
 
-		serverConn.SetDeadline(time.Now().Add(u.readDeadline))
+		err := serverConn.SetDeadline(time.Now().Add(u.readDeadline))
+		if err != nil {
+			return err
+		}
 
 		n, clientAddr, err := serverConn.ReadFromUDP(buf)
 		if err != nil {
 			// check if the error is a timeout error
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
 				continue
 			}
 
@@ -77,13 +84,20 @@ func (u *udpServer) listen() error {
 		// copy the message and pass it to the handler function
 		msg := make([]byte, n)
 		copy(msg, buf[:n])
-		u.msgHandler(msg)
+		err = u.msgHandler(msg)
+		if err != nil {
+			return err
+		}
 
 		// respond to the origin connection
-		serverConn.SetWriteDeadline(time.Now().Add(u.writeDeadline))
+		err = serverConn.SetWriteDeadline(time.Now().Add(u.writeDeadline))
+		if err != nil {
+			return err
+		}
 		_, err = serverConn.WriteToUDP(respMsg, clientAddr)
 		if err != nil {
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
 				continue
 			}
 
@@ -105,7 +119,7 @@ func (u *udpServer) errHandler() {
 	u.wg.Done()
 }
 
-func (u *udpServer) stop() error {
+func (u *udpServer) Stop() error {
 	// stop the server and wait for it to finish
 	u.stopCh <- struct{}{}
 	<-u.stopCh
