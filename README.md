@@ -18,6 +18,12 @@ This can be helpful for _debugging_ metrics themselves, and to prevent polluting
 
 ## Usage
 
+### Install with Go
+
+```
+go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
+```
+
 ### Build Manually
 
 This is a go application with no external dependencies. Building should be as simple as running `go build` in the source directory.
@@ -31,6 +37,7 @@ $ ./dogstatsd-local -port=8126
 
 Pre-built binaries for Linux, Mac and Windows are available for x86-64 and AArch64.
 Check out the [releases](https://github.com/mroyme/dogstatsd-local/releases/latest) page.
+
 
 ### Docker
 
