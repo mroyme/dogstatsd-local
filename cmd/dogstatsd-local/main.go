@@ -4,6 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mroyme/dogstatsd-local/internal/handler"
+	"github.com/mroyme/dogstatsd-local/internal/handler/json"
+	"github.com/mroyme/dogstatsd-local/internal/handler/pretty"
+	"github.com/mroyme/dogstatsd-local/internal/handler/raw"
+	"github.com/mroyme/dogstatsd-local/internal/handler/short"
 	"github.com/mroyme/dogstatsd-local/internal/server"
 	"log"
 	"os"
@@ -28,13 +32,13 @@ func main() {
 
 	switch *format {
 	case "json":
-		msgHandler = handler.NewJSONMessageHandler(extraTags)
+		msgHandler = json.NewHandler(extraTags)
 	case "short":
-		msgHandler = handler.NewShortMessageHandler(extraTags)
+		msgHandler = short.NewHandler(extraTags)
 	case "raw":
-		msgHandler = handler.NewRawMessageHandler()
+		msgHandler = raw.NewHandler()
 	default:
-		msgHandler = handler.NewPrettyMessageHandler(extraTags, *maxNameWidth, *maxValueWidth)
+		msgHandler = pretty.NewHandler(extraTags, *maxNameWidth, *maxValueWidth)
 	}
 	asyncHandler := handler.NewAsyncMessageHandler(msgHandler, 1000, 10000)
 
