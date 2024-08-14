@@ -42,10 +42,28 @@ Check out the [releases](https://github.com/mroyme/dogstatsd-local/releases/late
 ### Docker
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local
+$ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 ```
 
 ## Sample Formats
+
+### Pretty 
+
+When writing a metric such as:
+
+```bash
+$ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
+```
+
+Running **dogstatsd-local** with the `-format raw` flag will output the plain udp packet:
+
+```bash
+$ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -format pretty
+COUNTER    namespace | metric                                1.00           TAGS = test
+```
+
+The output will be colored if your shell supports colors.
+If colors aren't displayed properly, ensure that `TERM` is set correctly in your environment.
 
 ### Raw (no formatting)
 
@@ -62,7 +80,7 @@ $ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format raw
 2017/12/03 23:11:31 namespace.metric.name:1|c|@1.00|#tag1
 ```
 
-### Human
+### Short 
 
 When writing a metric such as:
 
@@ -70,10 +88,10 @@ When writing a metric such as:
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-format human` flag will output a human readable metric:
+Running **dogstatsd-local** with the `-format short` flag will output a short, albeit still human-readable metric:
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format human
+$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format short
 metric:counter|namespace.metric|1.00  test
 
 ```
