@@ -15,7 +15,7 @@ type Server interface {
 	Stop() error
 }
 
-func NewServer(addr string, fn handler.MsgHandler) Server {
+func NewServer(addr string, fn handler.MessageHandler) Server {
 	return &udpServer{
 		msgHandler:    fn,
 		rawAddr:       addr,
@@ -28,7 +28,7 @@ func NewServer(addr string, fn handler.MsgHandler) Server {
 }
 
 type udpServer struct {
-	msgHandler handler.MsgHandler
+	msgHandler handler.MessageHandler
 	rawAddr    string
 
 	readDeadline  time.Duration
