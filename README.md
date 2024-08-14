@@ -5,6 +5,8 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
 > A local implementation of the dogstatsd protocol from [Datadog](https://www.datadog.com)
+>
+> Up-to-date fork of [jonmorehouse/dogstatsd-local](https://github.com/jonmorehouse/dogstatsd-local)
 
 
 ## Why?
