@@ -1,13 +1,23 @@
-FROM golang:latest
+FROM golang:1.22 AS build_base
 
-COPY . /src
+WORKDIR /tmp/dogstatsd-local
 
-RUN cd /src && CGO_ENABLED=0 GOOS=linux go build -o /dogstatsd-local -a .
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 go test -v ./...
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./out/dogstatsd-local ./cmd/dogstatsd-local/main.go
 
 FROM scratch
 
-COPY --from=0 /dogstatsd-local .
+COPY --from=build_base /tmp/dogstatsd-local/out/dogstatsd-local /app/dogstatsd-local
+
 EXPOSE 8125
 
-ENTRYPOINT ["/dogstatsd-local"]
-CMD ["/dogstatsd-local"]
+ENTRYPOINT ["/app/dogstatsd-local"]
+CMD ["/app/dogstatsd-local"]
