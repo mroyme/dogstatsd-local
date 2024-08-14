@@ -1,6 +1,6 @@
 # Dogstatsd Local
 
-[![Go](https://github.com/mroyme/dogstatsd-local/actions/workflows/go.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/go.yml)
+[![Docker](https://github.com/mroyme/dogstatsd-local/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/docker-publish.yml)
 [![golangci-lint](https://github.com/mroyme/dogstatsd-local/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/golangci-lint.yml)
 [![SLSA Go releaser](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
