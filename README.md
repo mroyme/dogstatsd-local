@@ -48,7 +48,7 @@ $ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 
 ### Pretty 
 
-When writing a metric such as:
+'Pretty' is the default format. When writing a metric such as:
 
 ```bash
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
@@ -63,6 +63,11 @@ COUNTER    namespace | metric                                1.00           TAGS
 
 The output will be colored if your shell supports colors.
 If colors aren't displayed properly, ensure that `TERM` is set correctly in your environment.
+
+Pretty supports the following extra flags:
+- `-max-name-width` (integer): Maximum length of name. Change if name is truncated (default 50)
+- `-max-name-width` (integer): Maximum length of name. Change if value is truncated (default 50)
+
 
 ### Raw (no formatting)
 
