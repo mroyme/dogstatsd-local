@@ -66,7 +66,7 @@ If colors aren't displayed properly, ensure that `TERM` is set correctly in your
 
 Pretty supports the following extra flags:
 - `-max-name-width` (integer): Maximum length of name. Change if name is truncated (default 50)
-- `-max-name-width` (integer): Maximum length of name. Change if value is truncated (default 50)
+- `-max-value-width` (integer): Maximum length of value. Change if value is truncated (default 50)
 
 
 ### Raw (no formatting)
