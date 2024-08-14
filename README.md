@@ -22,7 +22,8 @@ $ ./dogstatsd-local -port=8126
 
 ### Prebuilt Binaries
 
-**Coming soon**
+Pre-built binaries for Linux, Mac and Windows are available for x86-64 and AArch64.
+Check out the [releases](https://github.com/mroyme/dogstatsd-local/releases/latest) page.
 
 ### Docker
 
