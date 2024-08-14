@@ -20,16 +20,19 @@ This can be helpful for _debugging_ metrics themselves, and to prevent polluting
 ### Install with Go
 
 ```
-go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
+$ go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
 ```
 
 ### Build Manually
 
-This is a go application with no external dependencies. Building should be as simple as running `go build` in the source directory.
+Run the following command in the source directory.
+```bash
+$ go build -o bin/dogstatsd-local ./cmd/dogstatsd-local/main.go
+```
 
 Once compiled, the `dogstatsd-local` binary can be run directly:
 ```bash
-$ ./dogstatsd-local -port=8126
+$ ./bin/dogstatsd-local -port=8126
 ```
 
 ### Prebuilt Binaries
