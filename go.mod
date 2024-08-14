@@ -1,3 +1,3 @@
 module github.com/mroyme/dogstatsd-local
 
-go 1.22.6
+go 1.22
