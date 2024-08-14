@@ -42,7 +42,7 @@ func main() {
 	go func(srv server.Server) {
 		defer wg.Done()
 		if err := srv.Listen(); err != nil {
-			log.Fatalf(err.Error())
+			log.Fatal(err.Error())
 		}
 	}(srv)
 
