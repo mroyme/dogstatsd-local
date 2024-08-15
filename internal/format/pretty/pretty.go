@@ -88,9 +88,11 @@ func (h *Handler) StyledMetricName(metric messages.DogStatsDMetric, width int) s
 			namespace = namespace[:lenNamespace-sub-1] + "~"
 		}
 	}
-	text := fmt.Sprintf("%s | %s",
-		lipgloss.NewStyle().Foreground(h.Theme.Lavender()).Render(namespace),
-		lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Pink()).Render(name))
+	var text string
+	if lenNamespace != 0 {
+		text += lipgloss.NewStyle().Foreground(h.Theme.Lavender()).Render(namespace) + " | "
+	}
+	text += lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Pink()).Render(name)
 	return lipgloss.NewStyle().
 		Width(width).
 		MaxWidth(width).
