@@ -2,16 +2,20 @@ package short
 
 import (
 	"fmt"
-	"github.com/mroyme/dogstatsd-local/internal/handler"
+	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"log"
 )
 
-func NewHandler(extraTags []string) handler.MessageHandler {
+type Handler struct {
+	Logger    *log.Logger
+	ExtraTags []string
+}
+
+func (h *Handler) New() messages.OutputHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
-			log.Println(err.Error())
+			h.Logger.Error(err)
 			return nil
 		}
 
@@ -28,7 +32,7 @@ func NewHandler(extraTags []string) handler.MessageHandler {
 		}
 
 		// iterate through tags
-		for _, tag := range append(extraTags, metric.Tags...) {
+		for _, tag := range append(h.ExtraTags, metric.Tags...) {
 			str += " " + tag
 		}
 

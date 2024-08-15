@@ -59,10 +59,10 @@ $ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-format raw` flag will output the plain udp packet:
+Running **dogstatsd-local** with the `-out raw` flag will output the plain udp packet:
 
 ```bash
-$ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -format pretty
+$ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pretty
 COUNTER    namespace | metric                                1.00           TAGS = test
 ```
 
@@ -82,10 +82,10 @@ When writing a metric such as:
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-format raw` flag will output the plain udp packet:
+Running **dogstatsd-local** with the `-out raw` flag will output the plain udp packet:
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format raw
+$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -out raw
 2017/12/03 23:11:31 namespace.metric.name:1|c|@1.00|#tag1
 ```
 
@@ -97,10 +97,10 @@ When writing a metric such as:
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-format short` flag will output a short, albeit still human-readable metric:
+Running **dogstatsd-local** with the `-out short` flag will output a short, albeit still human-readable metric:
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format short
+$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -out short
 metric:counter|namespace.metric|1.00  test
 
 ```
@@ -112,17 +112,17 @@ When writing a metric such as:
 $ printf "namespace.metric:1|c|#test|extra" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-format json` flag will output json:
+Running **dogstatsd-local** with the `-out json` flag will output json:
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format json | jq .
+$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
 {"namespace":"namespace","name":"metric","path":"namespace.metric","value":1,"extras":["extra"],"sample_rate":1,"tags":["test"]}
 ```
 
 **dogstatsd-local** can be piped to any process that understands json via stdin. For example, to pretty print JSON with [jq](https://stedolan.github.io/jq/):
 
 ```bash
-$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -format json | jq .
+$ docker run -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
 {
   "namespace": "namespace",
   "name": "metric",
