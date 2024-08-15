@@ -63,7 +63,7 @@ Running **dogstatsd-local** with the `-out raw` flag will output the plain udp p
 
 ```bash
 $ docker run -t -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pretty
-COUNTER    namespace | metric                                1.00           TAGS = test
+COUNTER    namespace | metric                                1.00            test
 ```
 
 The output will be colored if your shell supports colors.

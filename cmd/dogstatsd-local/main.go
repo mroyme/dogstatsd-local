@@ -25,7 +25,8 @@ func main() {
 	out := flag.String("out", "pretty", "Output format: json|pretty|raw|short")
 	rawTags := flag.String("tags", "", "Extra tags, comma delimited")
 	maxNameWidth := flag.Int("max-name-width", 50,
-		"Maximum length of name. Only used for 'pretty' format, increase if name is truncated")
+		"Maximum length of name. Only used for 'pretty' format, increase if name is truncated."+
+			" Values below 50 have no effect.")
 	maxValueWidth := flag.Int("max-value-width", 15,
 		"Maximum length of value. Only used for 'pretty' format, increase if value is truncated")
 	debug := flag.Bool("debug", false, "Enable debug mode")
