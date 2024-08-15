@@ -2,24 +2,25 @@ package pretty
 
 import (
 	"fmt"
-	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mroyme/dogstatsd-local/internal/handler"
+	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"log"
 	"strings"
 )
 
-var theme = CatppuccinAdaptiveTheme{
-	light: catppuccin.Latte,
-	dark:  catppuccin.Mocha,
+type Handler struct {
+	Logger     *log.Logger
+	Theme      *CatppuccinAdaptiveTheme
+	ExtraTags  []string
+	NameWidth  int
+	ValueWidth int
 }
 
-func NewHandler(extraTags []string, nameWidth int, valueWidth int) handler.MessageHandler {
+func (h *Handler) New() messages.OutputHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
-			log.Println(err.Error())
+			h.Logger.Error(err)
 			return nil
 		}
 		metric, ok := dMsg.(messages.DogStatsDMetric)
@@ -27,31 +28,31 @@ func NewHandler(extraTags []string, nameWidth int, valueWidth int) handler.Messa
 			return nil
 		}
 
-		str := styledMetricType(metric)
-		str += styledMetricName(metric, nameWidth)
-		str += styledMetricValue(metric, valueWidth)
-		str += styledTags(metric, extraTags)
+		str := h.styledMetricType(metric)
+		str += h.styledMetricName(metric, h.NameWidth)
+		str += h.styledMetricValue(metric, h.ValueWidth)
+		str += h.styledTags(metric, h.ExtraTags)
 		fmt.Println(str)
 		return nil
 	}
 }
 
-func styledMetricType(metric messages.DogStatsDMetric) string {
+func (h *Handler) styledMetricType(metric messages.DogStatsDMetric) string {
 	var fg lipgloss.AdaptiveColor
 	metricType := metric.MetricType
 	switch metricType {
 	case messages.CounterMetricType:
-		fg = theme.Green()
+		fg = h.Theme.Green()
 	case messages.HistogramMetricType:
-		fg = theme.Blue()
+		fg = h.Theme.Blue()
 	case messages.GaugeMetricType:
-		fg = theme.Teal()
+		fg = h.Theme.Teal()
 	case messages.TimerMetricType:
-		fg = theme.Mauve()
+		fg = h.Theme.Mauve()
 	case messages.SetMetricType:
-		fg = theme.Pink()
+		fg = h.Theme.Pink()
 	default:
-		fg = theme.Text()
+		fg = h.Theme.Text()
 	}
 	style := lipgloss.NewStyle().
 		Width(11).
@@ -59,7 +60,7 @@ func styledMetricType(metric messages.DogStatsDMetric) string {
 	return style.Render(strings.ToUpper(metricType.String()))
 }
 
-func styledMetricName(metric messages.DogStatsDMetric, width int) string {
+func (h *Handler) styledMetricName(metric messages.DogStatsDMetric, width int) string {
 	text := fmt.Sprintf("%s | %s", metric.Namespace, metric.Name)
 	if len(text) > width {
 		text = text[:width-3] + "..."
@@ -67,11 +68,11 @@ func styledMetricName(metric messages.DogStatsDMetric, width int) string {
 	style := lipgloss.NewStyle().
 		Width(50).
 		MaxWidth(50).
-		Foreground(theme.Lavender())
+		Foreground(h.Theme.Lavender())
 	return style.Render(text)
 }
 
-func styledMetricValue(metric messages.DogStatsDMetric, width int) string {
+func (h *Handler) styledMetricValue(metric messages.DogStatsDMetric, width int) string {
 	value := fmt.Sprintf("%.2f", metric.FloatValue)
 	if len(value) > width {
 		value = value[:width-3] + "..."
@@ -79,20 +80,20 @@ func styledMetricValue(metric messages.DogStatsDMetric, width int) string {
 	style := lipgloss.NewStyle().
 		Width(15).
 		MaxWidth(15).
-		Foreground(theme.Sapphire())
+		Foreground(h.Theme.Sapphire())
 	if metric.MetricType == messages.TimerMetricType {
 		value += "ms"
 	}
 	return style.Render(value)
 }
 
-func styledTags(metric messages.DogStatsDMetric, extraTags []string) string {
+func (h *Handler) styledTags(metric messages.DogStatsDMetric, extraTags []string) string {
 	style := lipgloss.NewStyle().
-		Foreground(theme.Subtext0())
+		Foreground(h.Theme.Subtext0())
 	var tags []string
 	for _, tag := range append(extraTags, metric.Tags...) {
 		tags = append(tags, strings.TrimSpace(tag))
 	}
-	prefix := style.Foreground(theme.Overlay0()).Render("TAGS =")
+	prefix := style.Foreground(h.Theme.Overlay0()).Render("TAGS =")
 	return prefix + style.SetString(tags...).Render()
 }

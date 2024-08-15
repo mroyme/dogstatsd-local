@@ -3,56 +3,79 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mroyme/dogstatsd-local/internal/handler"
-	"github.com/mroyme/dogstatsd-local/internal/handler/json"
-	"github.com/mroyme/dogstatsd-local/internal/handler/pretty"
-	"github.com/mroyme/dogstatsd-local/internal/handler/raw"
-	"github.com/mroyme/dogstatsd-local/internal/handler/short"
+	catppuccin "github.com/catppuccin/go"
+	"github.com/charmbracelet/log"
+	"github.com/mroyme/dogstatsd-local/internal/format"
+	"github.com/mroyme/dogstatsd-local/internal/format/json"
+	"github.com/mroyme/dogstatsd-local/internal/format/pretty"
+	"github.com/mroyme/dogstatsd-local/internal/format/raw"
+	"github.com/mroyme/dogstatsd-local/internal/format/short"
+	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"github.com/mroyme/dogstatsd-local/internal/server"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 )
 
 func main() {
 	host := flag.String("host", "0.0.0.0", "Bind address")
 	port := flag.Int("port", 8125, "Listen port")
-	format := flag.String("format", "pretty", "Output format: json|pretty|raw|short")
+	out := flag.String("out", "pretty", "Output format: json|pretty|raw|short")
 	rawTags := flag.String("tags", "", "Extra tags, comma delimited")
 	maxNameWidth := flag.Int("max-name-width", 50,
 		"Maximum length of name. Only used for 'pretty' format, increase if name is truncated")
 	maxValueWidth := flag.Int("max-value-width", 15,
 		"Maximum length of value. Only used for 'pretty' format, increase if value is truncated")
+	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
 	extraTags := strings.Split(*rawTags, ",")
-	var msgHandler handler.MessageHandler
+	logger := getLogger(*debug)
 
-	switch *format {
+	var formatHandler format.Handler
+	switch *out {
 	case "json":
-		msgHandler = json.NewHandler(extraTags)
+		logger.SetFormatter(log.JSONFormatter)
+		formatHandler = &json.Handler{Logger: logger, ExtraTags: extraTags}
 	case "short":
-		msgHandler = short.NewHandler(extraTags)
+		formatHandler = &short.Handler{Logger: logger, ExtraTags: extraTags}
 	case "raw":
-		msgHandler = raw.NewHandler()
+		formatHandler = &raw.Handler{Logger: logger}
 	default:
-		msgHandler = pretty.NewHandler(extraTags, *maxNameWidth, *maxValueWidth)
+		theme := &pretty.CatppuccinAdaptiveTheme{
+			Light: catppuccin.Latte,
+			Dark:  catppuccin.Mocha,
+		}
+		formatHandler = &pretty.Handler{
+			Logger:     logger,
+			Theme:      theme,
+			ExtraTags:  extraTags,
+			NameWidth:  *maxNameWidth,
+			ValueWidth: *maxValueWidth,
+		}
 	}
-	asyncHandler := handler.NewAsyncMessageHandler(msgHandler, 1000, 10000)
+
+	asyncMessageHandler := messages.Handler{
+		Logger:     logger,
+		Out:        formatHandler.New(),
+		PoolSize:   1000,
+		BufferSize: 10000,
+	}
+	messageHandler := asyncMessageHandler.New()
 
 	var wg sync.WaitGroup
 
 	// create a new server and listen on a background goroutine
 	addr := fmt.Sprintf("%s:%d", *host, *port)
-	log.Println("listening over UDP at ", addr)
-	srv := server.NewServer(addr, asyncHandler.Handler)
+	logger.Infof("listening over UDP at %s", addr)
+	srv := server.NewServer(addr, messageHandler.Handle, logger)
 	wg.Add(1)
 	go func(srv server.Server) {
 		defer wg.Done()
 		if err := srv.Listen(); err != nil {
-			log.Fatal(err.Error())
+			logger.Fatal(err)
 		}
 	}(srv)
 
@@ -61,8 +84,26 @@ func main() {
 	<-sigCh
 
 	if err := srv.Stop(); err != nil {
-		log.Println(err.Error())
+		logger.Error(err)
 	}
 	wg.Wait()
-	asyncHandler.Stop()
+	messageHandler.Stop()
+}
+
+func getLogger(debug bool) *log.Logger {
+	var logLevel log.Level
+	var logReportCaller bool
+	logTimeFormat := time.TimeOnly
+	if debug {
+		logLevel = log.DebugLevel
+		logReportCaller = true
+		logTimeFormat = time.RFC3339
+	}
+
+	return log.NewWithOptions(os.Stderr, log.Options{
+		Level:           logLevel,
+		ReportCaller:    logReportCaller,
+		ReportTimestamp: true,
+		TimeFormat:      logTimeFormat,
+	})
 }

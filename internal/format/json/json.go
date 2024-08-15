@@ -3,27 +3,32 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mroyme/dogstatsd-local/internal/handler"
+	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"log"
 	"os"
 )
 
-func NewHandler(extraTags []string) handler.MessageHandler {
+type Handler struct {
+	Logger    *log.Logger
+	ExtraTags []string
+}
+
+func (h *Handler) New() messages.OutputHandler {
 	return func(msg []byte) error {
 		dMsg, err := messages.ParseDogStatsDMessage(msg)
 		if err != nil {
-			log.Println(err.Error())
+			h.Logger.Error(err)
 		}
 
 		if dMsg.Type() != messages.MetricMessageType {
-			log.Println("Unable to serialize non metric messages to JSON yet")
+			h.Logger.Error("unable to serialize non-metric messages to JSON yet")
 			return nil
 		}
 
 		metric, ok := dMsg.(messages.DogStatsDMetric)
 		if !ok {
-			log.Fatalf("Programming error: invalid Type() = type matching")
+			h.Logger.Error("could not match message to metric")
+			return nil
 		}
 
 		jsonMsg := jsonMetric{
@@ -33,12 +38,12 @@ func NewHandler(extraTags []string) handler.MessageHandler {
 			Value:      metric.FloatValue,
 			Extras:     metric.Extras,
 			SampleRate: metric.SampleRate,
-			Tags:       append(extraTags, metric.Tags...),
+			Tags:       append(h.ExtraTags, metric.Tags...),
 		}
 
 		enc := json.NewEncoder(os.Stdout)
 		if err := enc.Encode(&jsonMsg); err != nil {
-			log.Println("JSON serialize error:", err.Error())
+			h.Logger.Error("JSON serialize error:", err)
 			return nil
 		}
 

@@ -2,12 +2,11 @@ package server
 
 import (
 	"errors"
-	"log"
+	"github.com/charmbracelet/log"
+	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"net"
 	"sync"
 	"time"
-
-	"github.com/mroyme/dogstatsd-local/internal/handler"
 )
 
 type Server interface {
@@ -15,8 +14,9 @@ type Server interface {
 	Stop() error
 }
 
-func NewServer(addr string, fn handler.MessageHandler) Server {
+func NewServer(addr string, fn messages.OutputHandler, logger *log.Logger) Server {
 	return &udpServer{
+		logger:        logger,
 		msgHandler:    fn,
 		rawAddr:       addr,
 		readDeadline:  time.Second / 4,
@@ -28,16 +28,14 @@ func NewServer(addr string, fn handler.MessageHandler) Server {
 }
 
 type udpServer struct {
-	msgHandler handler.MessageHandler
-	rawAddr    string
-
+	logger        *log.Logger
+	msgHandler    messages.OutputHandler
+	rawAddr       string
 	readDeadline  time.Duration
 	writeDeadline time.Duration
-
-	stopCh chan struct{}
-	errCh  chan error
-
-	wg sync.WaitGroup
+	stopCh        chan struct{}
+	errCh         chan error
+	wg            sync.WaitGroup
 }
 
 func (u *udpServer) Listen() error {
@@ -81,7 +79,7 @@ func (u *udpServer) Listen() error {
 			continue
 		}
 
-		// copy the message and pass it to the handler function
+		// copy the message and pass it to the format function
 		msg := make([]byte, n)
 		copy(msg, buf[:n])
 		err = u.msgHandler(msg)
@@ -113,7 +111,7 @@ stop:
 
 func (u *udpServer) errHandler() {
 	for err := range u.errCh {
-		log.Println(err.Error())
+		log.Error(err)
 	}
 
 	u.wg.Done()
