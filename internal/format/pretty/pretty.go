@@ -119,9 +119,5 @@ func (h *Handler) StyledTags(metric messages.DogStatsDMetric, extraTags []string
 	style := lipgloss.NewStyle().
 		Foreground(h.Theme.Overlay0()).
 		Italic(true)
-	var tags []string
-	for _, tag := range append(extraTags, metric.Tags...) {
-		tags = append(tags, strings.TrimSpace(tag))
-	}
-	return style.SetString(tags...).Render()
+	return style.SetString(append(extraTags, metric.Tags...)...).Render()
 }

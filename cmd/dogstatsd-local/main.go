@@ -32,7 +32,10 @@ func main() {
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
-	extraTags := strings.Split(*rawTags, ",")
+	var extraTags []string
+	if *rawTags != "" {
+		extraTags = strings.Split(*rawTags, ",")
+	}
 	logger := getLogger(*debug)
 
 	var formatHandler format.Handler
