@@ -28,16 +28,16 @@ func (h *Handler) New() messages.OutputHandler {
 			return nil
 		}
 
-		str := h.styledMetricType(metric)
-		str += h.styledMetricName(metric, h.NameWidth)
-		str += h.styledMetricValue(metric, h.ValueWidth)
-		str += h.styledTags(metric, h.ExtraTags)
+		str := h.StyledMetricType(metric)
+		str += h.StyledMetricName(metric, h.NameWidth)
+		str += h.StyledMetricValue(metric, h.ValueWidth)
+		str += h.StyledTags(metric, h.ExtraTags)
 		fmt.Println(str)
 		return nil
 	}
 }
 
-func (h *Handler) styledMetricType(metric messages.DogStatsDMetric) string {
+func (h *Handler) StyledMetricType(metric messages.DogStatsDMetric) string {
 	var fg lipgloss.AdaptiveColor
 	metricType := metric.MetricType
 	switch metricType {
@@ -56,23 +56,48 @@ func (h *Handler) styledMetricType(metric messages.DogStatsDMetric) string {
 	}
 	style := lipgloss.NewStyle().
 		Width(11).
+		Underline(true).
 		Foreground(fg)
 	return style.Render(strings.ToUpper(metricType.String()))
 }
 
-func (h *Handler) styledMetricName(metric messages.DogStatsDMetric, width int) string {
-	text := fmt.Sprintf("%s | %s", metric.Namespace, metric.Name)
-	if len(text) > width {
-		text = text[:width-3] + "..."
+func (h *Handler) StyledMetricName(metric messages.DogStatsDMetric, width int) string {
+	// Minimum supported width is 50
+	if width < 50 {
+		width = 50
 	}
-	style := lipgloss.NewStyle().
-		Width(50).
-		MaxWidth(50).
-		Foreground(h.Theme.Lavender())
-	return style.Render(text)
+	namespace := metric.Namespace
+	name := metric.Name
+	lenNamespace := len(namespace)
+	lenName := len(name)
+	textLen := lenNamespace + lenName
+
+	// 3 for the separator " | " + 1 for gap with the next field
+	if textLen > width-4 {
+		diff := textLen - (width - 4)
+		if lenName-diff > 20 {
+			name = name[:lenName-diff-1] + "~"
+		} else if lenNamespace-diff > 20 {
+			namespace = namespace[:lenNamespace-diff-1] + "~"
+		} else {
+			sub := diff / 2
+			name = name[:lenName-sub-1] + "~"
+			if diff%2 != 0 {
+				sub++
+			}
+			namespace = namespace[:lenNamespace-sub-1] + "~"
+		}
+	}
+	text := fmt.Sprintf("%s | %s",
+		lipgloss.NewStyle().Foreground(h.Theme.Lavender()).Render(namespace),
+		lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Pink()).Render(name))
+	return lipgloss.NewStyle().
+		Width(width).
+		MaxWidth(width).
+		Render(text)
 }
 
-func (h *Handler) styledMetricValue(metric messages.DogStatsDMetric, width int) string {
+func (h *Handler) StyledMetricValue(metric messages.DogStatsDMetric, width int) string {
 	value := fmt.Sprintf("%.2f", metric.FloatValue)
 	if len(value) > width {
 		value = value[:width-3] + "..."
@@ -80,6 +105,7 @@ func (h *Handler) styledMetricValue(metric messages.DogStatsDMetric, width int) 
 	style := lipgloss.NewStyle().
 		Width(15).
 		MaxWidth(15).
+		Bold(true).
 		Foreground(h.Theme.Sapphire())
 	if metric.MetricType == messages.TimerMetricType {
 		value += "ms"
@@ -87,13 +113,13 @@ func (h *Handler) styledMetricValue(metric messages.DogStatsDMetric, width int) 
 	return style.Render(value)
 }
 
-func (h *Handler) styledTags(metric messages.DogStatsDMetric, extraTags []string) string {
+func (h *Handler) StyledTags(metric messages.DogStatsDMetric, extraTags []string) string {
 	style := lipgloss.NewStyle().
-		Foreground(h.Theme.Subtext0())
+		Foreground(h.Theme.Overlay0()).
+		Italic(true)
 	var tags []string
 	for _, tag := range append(extraTags, metric.Tags...) {
 		tags = append(tags, strings.TrimSpace(tag))
 	}
-	prefix := style.Foreground(h.Theme.Overlay0()).Render("TAGS =")
-	return prefix + style.SetString(tags...).Render()
+	return style.SetString(tags...).Render()
 }
