@@ -26,9 +26,12 @@ func (h *Handler) New() *Handler {
 		go func() {
 			defer h.wg.Done()
 			for msg := range h.msgCh {
-				err := h.Out(msg)
-				if err != nil {
-					return
+				if h.Out != nil {
+					err := h.Out(msg)
+					if err != nil {
+						h.Logger.Error(err)
+						return
+					}
 				}
 			}
 		}()
