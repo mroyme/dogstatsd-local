@@ -59,7 +59,7 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 $ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-out raw` flag will output the plain udp packet:
+Running **dogstatsd-local** with the `-out pretty` flag will parse the UDP packets and print a colorized output:
 
 ```bash
 $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pretty
