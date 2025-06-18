@@ -1,6 +1,7 @@
 # Dogstatsd Local
 
 [![Docker](https://github.com/mroyme/dogstatsd-local/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/docker-publish.yml)
+[![Trivy](https://github.com/mroyme/dogstatsd-local/actions/workflows/trivy.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/trivy.yml)
 [![SLSA Go releaser](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
