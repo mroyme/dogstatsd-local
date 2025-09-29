@@ -2,11 +2,12 @@ package server
 
 import (
 	"errors"
-	"github.com/charmbracelet/log"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/charmbracelet/log"
+	"github.com/mroyme/dogstatsd-local/internal/messages"
 )
 
 type Server interface {
@@ -104,7 +105,7 @@ func (u *udpServer) Listen() error {
 	}
 
 stop:
-	serverConn.Close()
+	_ = serverConn.Close()
 	close(u.stopCh)
 	return nil
 }
