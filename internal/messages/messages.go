@@ -184,7 +184,7 @@ func parseDogStatsDMetricMessage(buf []byte) (DogStatsDMessage, error) {
 	metric.FloatValue = floatValue
 
 	if metric.MetricType == TimerMetricType {
-		metric.DurationValue = time.Duration(metric.FloatValue) / time.Millisecond
+		metric.DurationValue = time.Duration(metric.FloatValue * float64(time.Millisecond))
 	}
 
 	// parse out sample rate, tags and any extras
