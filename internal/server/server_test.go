@@ -163,7 +163,7 @@ func TestServerStripsCarriageReturns(t *testing.T) {
 
 func TestServerForwardsDatagrams(t *testing.T) {
 	var received atomic.Int32
-	var messages [][]byte
+	done := make(chan []byte, 2)
 
 	handler := func(msg []byte) error {
 		return nil
@@ -173,7 +173,7 @@ func TestServerForwardsDatagrams(t *testing.T) {
 		received.Add(1)
 		cp := make([]byte, len(datagram))
 		copy(cp, datagram)
-		messages = append(messages, cp)
+		done <- cp
 	}
 
 	port := findAvailablePort(t)
@@ -207,6 +207,17 @@ func TestServerForwardsDatagrams(t *testing.T) {
 
 	if err := srv.Stop(); err != nil {
 		t.Fatalf("failed to stop server: %v", err)
+	}
+
+	// Collect forwarded datagrams via channel to avoid data race
+	var messages [][]byte
+	for range int(received.Load()) {
+		select {
+		case msg := <-done:
+			messages = append(messages, msg)
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for forwarded datagram")
+		}
 	}
 
 	if got := received.Load(); got != 2 {

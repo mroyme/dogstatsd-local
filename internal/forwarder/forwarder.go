@@ -13,7 +13,9 @@ type Forwarder struct {
 	Address string
 	conn    *net.UDPConn
 	started bool
+	ch      chan []byte
 	mu      sync.Mutex
+	wg      sync.WaitGroup
 }
 
 func (f *Forwarder) Start() error {
@@ -34,26 +36,52 @@ func (f *Forwarder) Start() error {
 		return err
 	}
 	f.conn = conn
+	f.ch = make(chan []byte, 10000)
 	f.started = true
+
+	ch := f.ch
+	logger := f.Logger
+
+	f.wg.Go(func() {
+		for data := range ch {
+			_, err := conn.Write(data)
+			if err != nil && logger != nil {
+				logger.Error("forward error", "addr", f.Address, "err", err)
+			}
+		}
+	})
 
 	return nil
 }
 
 func (f *Forwarder) Forward(data []byte) {
 	f.mu.Lock()
-	defer f.mu.Unlock()
+	ch := f.ch
+	f.mu.Unlock()
 
-	if f.conn == nil {
+	if ch == nil {
 		return
 	}
 
-	_, err := f.conn.Write(data)
-	if err != nil {
-		f.Logger.Error("forward error", "addr", f.Address, "err", err)
+	select {
+	case ch <- data:
+	default:
+		if f.Logger != nil {
+			f.Logger.Error("forward buffer full, dropping datagram", "addr", f.Address)
+		}
 	}
 }
 
 func (f *Forwarder) Stop() error {
+	f.mu.Lock()
+	if f.ch != nil {
+		close(f.ch)
+		f.ch = nil
+	}
+	f.mu.Unlock()
+
+	f.wg.Wait()
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
