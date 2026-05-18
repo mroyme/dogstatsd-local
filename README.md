@@ -12,7 +12,7 @@
 dogstatsd-local
 ```
 
-![Pretty format output](https://raw.githubusercontent.com/mroyme/dogstatsd-local/main/docs/assets/pretty-format.png)
+![Pretty format output](https://mroyme.github.io/dogstatsd-local/assets/pretty-format.png)
 
 ## Features
 
