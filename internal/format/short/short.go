@@ -2,6 +2,7 @@ package short
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
@@ -27,8 +28,14 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "ms"
 			}
 
-			for _, tag := range append(h.ExtraTags, metric.Tags...) {
-				str += " " + tag
+			tags := append(h.ExtraTags, metric.Tags...)
+			if len(tags) > 0 {
+				var b strings.Builder
+				for _, tag := range tags {
+					b.WriteByte(' ')
+					b.WriteString(tag)
+				}
+				str += b.String()
 			}
 
 			fmt.Println(str)
@@ -47,8 +54,14 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "|host:" + sc.Hostname
 			}
 
-			for _, tag := range append(h.ExtraTags, sc.Tags...) {
-				str += " " + tag
+			tags := append(h.ExtraTags, sc.Tags...)
+			if len(tags) > 0 {
+				var b strings.Builder
+				for _, tag := range tags {
+					b.WriteByte(' ')
+					b.WriteString(tag)
+				}
+				str += b.String()
 			}
 
 			fmt.Println(str)
@@ -73,8 +86,14 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "|host:" + ev.Hostname
 			}
 
-			for _, tag := range append(h.ExtraTags, ev.Tags...) {
-				str += " " + tag
+			tags := append(h.ExtraTags, ev.Tags...)
+			if len(tags) > 0 {
+				var b strings.Builder
+				for _, tag := range tags {
+					b.WriteByte(' ')
+					b.WriteString(tag)
+				}
+				str += b.String()
 			}
 
 			fmt.Println(str)

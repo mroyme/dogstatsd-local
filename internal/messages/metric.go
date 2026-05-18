@@ -97,11 +97,9 @@ func parseDogStatsDMetricMessage(buf []byte) (DogStatsDMessage, error) {
 		}
 
 		if strings.HasPrefix(piece, "#") {
-			tags := strings.Split(piece[1:], ",")
-			for i := range tags {
-				tags[i] = strings.TrimSpace(tags[i])
+			for part := range strings.SplitSeq(piece[1:], ",") {
+				metric.Tags = append(metric.Tags, strings.TrimSpace(part))
 			}
-			metric.Tags = append(metric.Tags, tags...)
 			continue
 		}
 
