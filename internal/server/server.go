@@ -15,10 +15,11 @@ type Server interface {
 	Stop() error
 }
 
-func NewServer(addr string, fn func([]byte) error, logger *log.Logger) Server {
+func NewServer(addr string, fn func([]byte) error, forward func([]byte), logger *log.Logger) Server {
 	return &udpServer{
 		logger:        logger,
 		msgHandler:    fn,
+		forward:       forward,
 		rawAddr:       addr,
 		readDeadline:  time.Second / 4,
 		writeDeadline: time.Second / 4,
@@ -31,6 +32,7 @@ func NewServer(addr string, fn func([]byte) error, logger *log.Logger) Server {
 type udpServer struct {
 	logger        *log.Logger
 	msgHandler    func([]byte) error
+	forward       func([]byte)
 	rawAddr       string
 	readDeadline  time.Duration
 	writeDeadline time.Duration
@@ -78,6 +80,11 @@ func (u *udpServer) Listen() error {
 
 			u.errCh <- err
 			continue
+		}
+
+		// forward the raw datagram to an upstream DogStatsD server
+		if u.forward != nil {
+			u.forward(buf[:n])
 		}
 
 		// copy the message and pass it to the format function
