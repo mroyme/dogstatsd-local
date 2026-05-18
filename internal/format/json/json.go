@@ -20,31 +20,52 @@ func (h *Handler) New() messages.OutputHandler {
 			h.Logger.Error(err)
 		}
 
-		if dMsg.Type() != messages.MetricMessageType {
-			h.Logger.Error("unable to serialize non-metric messages to JSON yet")
-			return nil
-		}
+		switch dMsg.Type() {
+		case messages.MetricMessageType:
+			metric, ok := dMsg.(messages.DogStatsDMetric)
+			if !ok {
+				h.Logger.Error("could not match message to metric")
+				return nil
+			}
 
-		metric, ok := dMsg.(messages.DogStatsDMetric)
-		if !ok {
-			h.Logger.Error("could not match message to metric")
-			return nil
-		}
+			jsonMsg := jsonMetric{
+				Namespace:  metric.Namespace,
+				Name:       metric.Name,
+				Path:       fmt.Sprintf("%s.%s", metric.Namespace, metric.Name),
+				Value:      metric.FloatValue,
+				Extras:     metric.Extras,
+				SampleRate: metric.SampleRate,
+				Tags:       append(h.ExtraTags, metric.Tags...),
+			}
 
-		jsonMsg := jsonMetric{
-			Namespace:  metric.Namespace,
-			Name:       metric.Name,
-			Path:       fmt.Sprintf("%s.%s", metric.Namespace, metric.Name),
-			Value:      metric.FloatValue,
-			Extras:     metric.Extras,
-			SampleRate: metric.SampleRate,
-			Tags:       append(h.ExtraTags, metric.Tags...),
-		}
+			enc := json.NewEncoder(os.Stdout)
+			if err := enc.Encode(&jsonMsg); err != nil {
+				h.Logger.Error("JSON serialize error:", err)
+			}
 
-		enc := json.NewEncoder(os.Stdout)
-		if err := enc.Encode(&jsonMsg); err != nil {
-			h.Logger.Error("JSON serialize error:", err)
-			return nil
+		case messages.ServiceCheckMessageType:
+			sc, ok := dMsg.(messages.DogStatsDServiceCheck)
+			if !ok {
+				h.Logger.Error("could not match message to service check")
+				return nil
+			}
+
+			jsonMsg := jsonServiceCheck{
+				Name:      sc.Name,
+				Status:    sc.Status.String(),
+				Message:   sc.Message,
+				Hostname:  sc.Hostname,
+				Tags:      append(h.ExtraTags, sc.Tags...),
+				Timestamp: sc.Timestamp.Unix(),
+			}
+
+			enc := json.NewEncoder(os.Stdout)
+			if err := enc.Encode(&jsonMsg); err != nil {
+				h.Logger.Error("JSON serialize error:", err)
+			}
+
+		default:
+			h.Logger.Error("unable to serialize message type to JSON")
 		}
 
 		return nil
@@ -59,4 +80,13 @@ type jsonMetric struct {
 	Extras     []string `json:"extras"`
 	SampleRate float64  `json:"sample_rate"`
 	Tags       []string `json:"tags"`
+}
+
+type jsonServiceCheck struct {
+	Name      string   `json:"name"`
+	Status    string   `json:"status"`
+	Message   string   `json:"message,omitempty"`
+	Hostname  string   `json:"hostname,omitempty"`
+	Tags      []string `json:"tags"`
+	Timestamp int64    `json:"timestamp"`
 }

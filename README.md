@@ -67,6 +67,18 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pr
 COUNTER    namespace | metric                                1.00            test
 ```
 
+When sending a service check:
+
+```bash
+$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+```
+
+The output is colorized by status (green=OK, yellow=WARNING, red=CRITICAL):
+
+```bash
+CRITICAL   Redis connection                       Redis connection timed out after 10s  env:dev
+```
+
 The output will be colored if your shell supports colors.
 If colors aren't displayed properly, ensure that `TERM` is set correctly in your environment.
 
@@ -103,7 +115,16 @@ Running **dogstatsd-local** with the `-out short` flag will output a short, albe
 ```bash
 $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out short
 metric:counter|namespace.metric|1.00  test
+```
 
+When sending a service check:
+
+```bash
+$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+```
+
+```bash
+service_check:Redis connection|CRITICAL|msg:Redis connection timed out after 10s env:dev
 ```
 
 ### JSON
@@ -118,6 +139,25 @@ Running **dogstatsd-local** with the `-out json` flag will output json:
 ```bash
 $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
 {"namespace":"namespace","name":"metric","path":"namespace.metric","value":1,"extras":["extra"],"sample_rate":1,"tags":["test"]}
+```
+
+When sending a service check:
+
+```bash
+$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+```
+
+```bash
+$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
+{
+  "name": "Redis connection",
+  "status": "CRITICAL",
+  "message": "Redis connection timed out after 10s",
+  "tags": [
+    "env:dev"
+  ],
+  "timestamp": 1656581400
+}
 ```
 
 **dogstatsd-local** can be piped to any process that understands json via stdin. For example, to pretty print JSON with [jq](https://stedolan.github.io/jq/):
@@ -141,6 +181,5 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out js
 
 ## TODO
 
-- [ ] support datadog service checks
 - [ ] support datadog events
 - [ ] support interval aggregation of percentiles
