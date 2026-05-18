@@ -96,11 +96,9 @@ func parseDogStatsDServiceCheckMessage(buf []byte) (DogStatsDMessage, error) {
 	// Parse optional fields: tags, timestamp, hostname
 	for _, piece := range pieces[2:] {
 		if strings.HasPrefix(piece, "#") {
-			tags := strings.Split(piece[1:], ",")
-			for i := range tags {
-				tags[i] = strings.TrimSpace(tags[i])
+			for part := range strings.SplitSeq(piece[1:], ",") {
+				sc.Tags = append(sc.Tags, strings.TrimSpace(part))
 			}
-			sc.Tags = append(sc.Tags, tags...)
 			continue
 		}
 		if strings.HasPrefix(piece, "d:") {

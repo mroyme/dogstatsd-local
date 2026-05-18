@@ -83,7 +83,7 @@ func (u *udpServer) Listen() error {
 		// copy the message and pass it to the format function
 		// DogStatsD supports multiple messages in a single datagram,
 		// separated by newlines (per the statsd/DogStatsD protocol).
-		for _, line := range bytes.Split(buf[:n], []byte("\n")) {
+		for line := range bytes.SplitSeq(buf[:n], []byte("\n")) {
 			line = bytes.TrimRight(line, "\r")
 			if len(line) == 0 {
 				continue

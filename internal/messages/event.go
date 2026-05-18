@@ -119,8 +119,7 @@ func parseDogStatsDEventMessage(buf []byte) (DogStatsDMessage, error) {
 		return ev, nil
 	}
 
-	pieces := strings.Split(payload, "|")
-	for _, piece := range pieces {
+	for piece := range strings.SplitSeq(payload, "|") {
 		if strings.HasPrefix(piece, "d:") {
 			ts, err := strconv.ParseInt(piece[2:], 10, 64)
 			if err == nil {
@@ -149,11 +148,9 @@ func parseDogStatsDEventMessage(buf []byte) (DogStatsDMessage, error) {
 			continue
 		}
 		if strings.HasPrefix(piece, "#") {
-			tags := strings.Split(piece[1:], ",")
-			for i := range tags {
-				tags[i] = strings.TrimSpace(tags[i])
+			for part := range strings.SplitSeq(piece[1:], ",") {
+				ev.Tags = append(ev.Tags, strings.TrimSpace(part))
 			}
-			ev.Tags = append(ev.Tags, tags...)
 			continue
 		}
 	}
