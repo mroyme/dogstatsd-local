@@ -5,221 +5,187 @@
 [![SLSA Go releaser](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml/badge.svg)](https://github.com/mroyme/dogstatsd-local/actions/workflows/go-ossf-slsa3-publish.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
-> A local implementation of the dogstatsd protocol from [Datadog](https://www.datadog.com)
+> A local implementation of the DogStatsD protocol from [Datadog](https://www.datadoghq.com)
 >
-> Up-to-date fork of [jonmorehouse/dogstatsd-local](https://github.com/jonmorehouse/dogstatsd-local)
+> [!NOTE]
+> Started as a fork of [jonmorehouse/dogstatsd-local](https://github.com/jonmorehouse/dogstatsd-local), which was no longer receiving updates. Since then, this project has diverged significantly — adding service check and event support, multiple output formats, Catppuccin-themed colors, metric forwarding, and more.
 
+`dogstatsd-local` listens on a UDP socket, parses DogStatsD (and statsd) metric messages, and outputs them to stdout in your choice of format. Use it to inspect and debug metrics locally before sending them to Datadog.
 
-## Why?
+## Table of Contents
 
-[Datadog](https://www.datadog.com) is great for production application metric aggregation. This project was inspired by the need to inspect and debug metrics _before_ sending them to `datadog`.
+- [Installation](#installation)
+- [Flags](#flags)
+- [Features](#features)
+- [Output Formats](#output-formats)
+  - [Pretty (default)](#pretty-default)
+  - [Short](#short)
+  - [JSON](#json)
+  - [Raw](#raw)
+- [Forwarding](#forwarding)
+- [DogStatsD Protocol](#dogstatsd-protocol)
 
-`dogstatsd-local` is a small program which understands the `dogstatsd` and `statsd` protocols. It listens on a local UDP server and writes metrics, events and service checks per the [dogstatsd protocol](https://docs.datadoghq.com/guides/dogstatsd/) to `stdout` in user configurable formats.
+## Installation
 
-This can be helpful for _debugging_ metrics themselves, and to prevent polluting datadog with noisy metrics from a development environment. **dogstatsd-local** can also be used to pipe metrics as json to other processes for further processing.
+### Go
 
-## Usage
-
-### Install with Go
-
-```
-$ go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
-```
-
-### Build Manually
-
-Run the following command in the source directory.
 ```bash
-$ go build -o bin/dogstatsd-local ./cmd/dogstatsd-local/main.go
+go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
 ```
-
-Once compiled, the `dogstatsd-local` binary can be run directly:
-```bash
-$ ./bin/dogstatsd-local -port=8126
-```
-
-### Prebuilt Binaries
-
-Pre-built binaries for Linux, Mac and Windows are available for x86-64 and AArch64.
-Check out the [releases](https://github.com/mroyme/dogstatsd-local/releases/latest) page.
-
 
 ### Docker
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
+docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 ```
 
-## Sample Formats
+### Prebuilt Binaries
 
-### Pretty 
+Download from the [releases](https://github.com/mroyme/dogstatsd-local/releases/latest) page for Linux, macOS, and Windows (x86-64 and ARM64).
 
-'Pretty' is the default format. When writing a metric such as:
+### Build from Source
 
 ```bash
-$ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
+go build -o bin/dogstatsd-local ./cmd/dogstatsd-local/main.go
 ```
 
-Running **dogstatsd-local** with the `-out pretty` flag will parse the UDP packets and print a colorized output:
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-host` | `0.0.0.0` | Bind address |
+| `-port` | `8125` | UDP listen port |
+| `-out` | `pretty` | Output format: `pretty`, `json`, `short`, `raw` |
+| `-forward` | (disabled) | Forward raw datagrams to an upstream DogStatsD server (e.g. `127.0.0.1:8126`) |
+| `-tags` | (empty) | Extra tags to append, comma-delimited |
+| `-max-name-width` | `50` | Max name length for pretty format (values below 50 have no effect) |
+| `-max-value-width` | `15` | Max value length for pretty format |
+| `-debug` | `false` | Enable debug logging |
+
+## Features
+
+- **Metrics** — counters (`c`), gauges (`g`), sets (`s`), timers (`ms`), histograms (`h`), distributions (`d`)
+- **Service checks** — `_sc|name|status|#tags|h:hostname|m:message`
+- **Events** — `_e{titleLen,textLen}:title|text|d:ts|h:host|p:priority|t:alert|k:aggkey|s:src_type|#tags`
+- **Forwarding** — proxy all datagrams to an upstream DogStatsD server with `-forward`
+- **Multi-message datagrams** — splits on `\n` per the DogStatsD protocol
+- **Extra tags** — append tags to every metric with `-tags`
+- **Catppuccin colors** — pretty format adapts to light/dark terminal themes
+
+## Output Formats
+
+### Pretty (default)
+
+Colorized, human-readable output:
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pretty
-COUNT        namespace | metric                                1.00            test
+printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
 ```
 
-When sending a service check:
-
-```bash
-$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+```
+COUNT      page | views                                      1.00           env:dev
 ```
 
-The output is colorized by status (green=OK, yellow=WARN, red=CRIT):
+Service checks are colorized by status (green=OK, yellow=WARN, red=CRIT):
 
 ```bash
-CRIT        Redis connection                       Redis connection timed out after 10s  env:dev
+printf "_sc|Redis connection|2|#env:dev|m:Timeout" | nc -u -w1 localhost 8125
 ```
 
-When sending an event:
-
-```bash
-$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```
+CRIT       Redis connection                                  Timeout env:dev
 ```
 
-The output is colorized by alert type (blue=info, yellow=warning, red=error, green=success):
+Events are colorized by alert type (blue=INFO, yellow=WARN, red=ERR, green=OK):
 
 ```bash
-WARN        An exception occurred                  Cannot parse CSV file from 10.0.0.17  err_type:bad_file
+printf "_e{21,36}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file" | nc -u -w1 localhost 8125
 ```
 
-The output will be colored if your shell supports colors.
-If colors aren't displayed properly, ensure that `TERM` is set correctly in your environment.
-
-Pretty supports the following extra flags:
-- `-max-name-width` (integer): Maximum length of name. Change if name is truncated (default 50)
-- `-max-value-width` (integer): Maximum length of value. Change if value is truncated (default 50)
-- `-debug` (boolean): Enable debug mode (default `false`)
-
-
-### Raw (no formatting)
-
-When writing a metric such as:
-
-```bash
-$ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
+```
+WARN       An exception occurred                             Cannot parse CSV file err_type:bad_file
 ```
 
-Running **dogstatsd-local** with the `-out raw` flag will output the plain udp packet:
+### Short
+
+Compact human-readable:
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out raw
-2017/12/03 23:11:31 namespace.metric.name:1|c|@1.00|#tag1
+printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
 ```
 
-### Short 
-
-When writing a metric such as:
-
-```bash
-$ printf "namespace.metric:1|c|#test" | nc -cu  localhost 8125
 ```
-
-Running **dogstatsd-local** with the `-out short` flag will output a short, albeit still human-readable metric:
-
-```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out short
-metric:counter|namespace.metric|1.00  test
-```
-
-When sending a service check:
-
-```bash
-$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+metric:count|page.views|1.00 env:dev
 ```
 
 ```bash
-service_check:Redis connection|CRIT|msg:Redis connection timed out after 10s env:dev
+printf "_sc|Redis connection|2|#env:dev|m:Timeout" | nc -u -w1 localhost 8125
 ```
 
-When sending an event:
-
-```bash
-$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```
+service_check:Redis connection|CRIT|msg:Timeout env:dev
 ```
 
 ```bash
-event:An exception occurred|Cannot parse CSV file from 10.0.0.17|priority:normal|alert:warning err_type:bad_file
+printf "_e{5,4}:title|text|t:info" | nc -u -w1 localhost 8125
+```
+
+```
+event:title|text|priority:normal|alert:info
 ```
 
 ### JSON
 
-When writing a metric such as:
+Machine-readable, one JSON object per line. Pipe through `jq` for pretty printing:
+
 ```bash
-$ printf "namespace.metric:1|c|#test|extra" | nc -cu  localhost 8125
+printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
 ```
 
-Running **dogstatsd-local** with the `-out json` flag will output json:
-
-```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
-{"namespace":"namespace","name":"metric","path":"namespace.metric","value":1,"extras":["extra"],"sample_rate":1,"tags":["test"]}
-```
-
-When sending a service check:
-
-```bash
-$ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
+```json
+{"namespace":"page","name":"views","path":"page.views","value":1,"sample_rate":1,"tags":["env:dev"]}
 ```
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
-{
-  "name": "Redis connection",
-  "status": "CRIT",
-  "message": "Redis connection timed out after 10s",
-  "tags": [
-    "env:dev"
-  ],
-  "timestamp": 1656581400
-}
+printf "_sc|Redis connection|2|#env:dev|m:Timeout" | nc -u -w1 localhost 8125
 ```
 
-When sending an event:
-
-```bash
-$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```json
+{"name":"Redis connection","status":"CRIT","message":"Timeout","tags":["env:dev"],"timestamp":1656581400}
 ```
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
-{
-  "title": "An exception occurred",
-  "text": "Cannot parse CSV file from 10.0.0.17",
-  "priority": "normal",
-  "alert_type": "warning",
-  "tags": [
-    "err_type:bad_file"
-  ],
-  "timestamp": 1656581400
-}
+printf "_e{5,4}:title|text|t:info" | nc -u -w1 localhost 8125
 ```
 
-**dogstatsd-local** can be piped to any process that understands json via stdin. For example, to pretty print JSON with [jq](https://stedolan.github.io/jq/):
+```json
+{"title":"title","text":"text","priority":"normal","alert_type":"info","tags":[]}
+```
+
+### Raw
+
+Passthrough of the original datagram:
 
 ```bash
-$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
-{
-  "namespace": "namespace",
-  "name": "metric",
-  "path": "namespace.metric",
-  "value": 1,
-  "extras": [
-    "extra"
-  ],
-  "sample_rate": 1,
-  "tags": [
-    "test"
-  ]
-}
+printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
 ```
 
-## TODO
+```
+page.views:1|c|#env:dev
+```
+
+## Forwarding
+
+Use `-forward` to proxy all datagrams to an upstream DogStatsD server while still inspecting them locally:
+
+```bash
+dogstatsd-local -forward 127.0.0.1:8126
+```
+
+This is useful for debugging in environments where you still want metrics to reach Datadog.
+
+## DogStatsD Protocol
+
+- **Metrics:** `name:value|type|@sample_rate|#tags` (types: `c` count, `g` gauge, `s` set, `ms` timer, `h` histogram, `d` distribution)
+- **Service checks:** `_sc|name|status|#tags|d:timestamp|h:hostname|m:message` (`m:` must be last, can contain `|`)
+- **Events:** `_e{<TITLE_LEN>,<TEXT_LEN>}:<TITLE>|<TEXT>|d:<TS>|h:<HOST>|p:<PRIORITY>|t:<ALERT_TYPE>|k:<AGG_KEY>|s:<SRC_TYPE>|#<TAGS>`
