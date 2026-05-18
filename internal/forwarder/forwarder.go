@@ -1,6 +1,7 @@
 package forwarder
 
 import (
+	"errors"
 	"net"
 	"sync"
 
@@ -11,22 +12,29 @@ type Forwarder struct {
 	Logger  *log.Logger
 	Address string
 	conn    *net.UDPConn
-	addr    *net.UDPAddr
+	started bool
 	mu      sync.Mutex
 }
 
 func (f *Forwarder) Start() error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if f.started {
+		return errors.New("forwarder already started")
+	}
+
 	addr, err := net.ResolveUDPAddr("udp", f.Address)
 	if err != nil {
 		return err
 	}
-	f.addr = addr
 
 	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
 		return err
 	}
 	f.conn = conn
+	f.started = true
 
 	return nil
 }
@@ -52,6 +60,7 @@ func (f *Forwarder) Stop() error {
 	if f.conn != nil {
 		err := f.conn.Close()
 		f.conn = nil
+		f.started = false
 		return err
 	}
 	return nil

@@ -2,7 +2,6 @@ package forwarder
 
 import (
 	"net"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -22,22 +21,18 @@ func TestForwarderForwardsDatagrams(t *testing.T) {
 	defer func() { _ = upstream.Close() }()
 
 	upstreamAddr := upstream.LocalAddr().String()
-
-	var received atomic.Int32
+	done := make(chan string, 1)
 	buf := make([]byte, 1024)
 
 	// Read forwarded datagrams in background
 	go func() {
-		for {
-			_ = upstream.SetReadDeadline(time.Now().Add(2 * time.Second))
-			n, _, err := upstream.ReadFromUDP(buf)
-			if err != nil {
-				return
-			}
-			if string(buf[:n]) == "page.views:1|c" {
-				received.Add(1)
-			}
+		_ = upstream.SetReadDeadline(time.Now().Add(2 * time.Second))
+		n, _, err := upstream.ReadFromUDP(buf)
+		if err != nil {
+			done <- err.Error()
+			return
 		}
+		done <- string(buf[:n])
 	}()
 
 	fwd := &Forwarder{
@@ -51,14 +46,17 @@ func TestForwarderForwardsDatagrams(t *testing.T) {
 
 	fwd.Forward([]byte("page.views:1|c"))
 
-	time.Sleep(200 * time.Millisecond)
+	select {
+	case got := <-done:
+		if got != "page.views:1|c" {
+			t.Errorf("forwarded %q, want %q", got, "page.views:1|c")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for forwarded datagram")
+	}
 
 	if err := fwd.Stop(); err != nil {
 		t.Fatalf("failed to stop forwarder: %v", err)
-	}
-
-	if got := received.Load(); got != 1 {
-		t.Errorf("forwarded %d datagrams, want 1", got)
 	}
 }
 
@@ -106,5 +104,31 @@ func TestForwarderInvalidAddress(t *testing.T) {
 
 	if err := fwd.Start(); err == nil {
 		t.Error("expected error for invalid address, got nil")
+	}
+}
+
+func TestForwarderDoubleStart(t *testing.T) {
+	addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to resolve addr: %v", err)
+	}
+	upstream, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		t.Fatalf("failed to listen: %v", err)
+	}
+	defer func() { _ = upstream.Close() }()
+
+	fwd := &Forwarder{
+		Logger:  log.Default(),
+		Address: upstream.LocalAddr().String(),
+	}
+
+	if err := fwd.Start(); err != nil {
+		t.Fatalf("failed to start forwarder: %v", err)
+	}
+	defer func() { _ = fwd.Stop() }()
+
+	if err := fwd.Start(); err == nil {
+		t.Error("expected error on double start, got nil")
 	}
 }

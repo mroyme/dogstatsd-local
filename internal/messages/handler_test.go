@@ -74,9 +74,9 @@ func TestHandlerParsesAllMessageTypes(t *testing.T) {
 	handler.Stop()
 
 	want := map[DogStatsDMessageType]int{
-		MetricMessageType:      2,
+		MetricMessageType:       2,
 		ServiceCheckMessageType: 2,
-		EventMessageType:       2,
+		EventMessageType:        2,
 	}
 
 	for typ, wantCount := range want {
