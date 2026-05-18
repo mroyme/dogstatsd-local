@@ -12,9 +12,7 @@ Datagrams are forwarded as-is — no parsing, no modification. This means upstre
 
 Run dogstatsd-local as a **middleware** between your application and the Datadog agent. Point your app at dogstatsd-local, and it transparently forwards everything upstream:
 
-```
-Application → dogstatsd-local (8126) → Datadog agent (8125)
-```
+>Application → dogstatsd-local (8126) → Datadog agent (8125)
 
 ```bash
 dogstatsd-local -port 8126 -forward 127.0.0.1:8125
@@ -26,9 +24,7 @@ Your metrics continue flowing to Datadog, while you inspect them locally. No met
 
     The Datadog agent listens on port **8125** by default. If you want dogstatsd-local on 8125 instead, reconfigure the agent to use a different port (e.g. 8126) and flip the direction:
 
-    ```
-    Application → dogstatsd-local (8125) → Datadog agent (8126)
-    ```
+    > Application → dogstatsd-local (8125) → Datadog agent (8126)
 
     ```bash
     dogstatsd-local -port 8125 -forward 127.0.0.1:8126
