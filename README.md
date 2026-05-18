@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
 > A local DogStatsD protocol inspector for debugging metrics, service checks, and events
->
+
 > [!TIP]
 > Full documentation available [here](https://mroyme.github.io/dogstatsd-local/)
 
@@ -19,10 +19,10 @@ dogstatsd-local
 
 ## Features
 
-- 📊 **All DogStatsD message types** — metrics (count, gauge, set, timer, histogram, distribution), service checks, events
-- 🎨 **4 output formats** — pretty, json, short, raw
-- 🔀 **Metric forwarding** — proxy datagrams to an upstream DogStatsD server while inspecting locally
-- 🌈 **Catppuccin colors** — pretty format adapts to your terminal's light/dark theme
+- **All DogStatsD message types** — metrics (count, gauge, set, timer, histogram, distribution), service checks, events
+- **Multiple output formats** — pretty, json, short, raw
+- **Metric forwarding** — proxy datagrams to an upstream DogStatsD server while inspecting locally
+- **Catppuccin colors** — pretty format adapts to your terminal's light/dark theme
 
 ## Installation
 
@@ -120,9 +120,7 @@ page.views:1|c|#env:dev
 
 Run as a middleware between your app and the Datadog agent:
 
-```
-Application → dogstatsd-local (8126) → Datadog agent (8125)
-```
+> Application → dogstatsd-local (8126) → Datadog agent (8125)
 
 ```bash
 dogstatsd-local -port 8126 -forward 127.0.0.1:8125
