@@ -42,7 +42,7 @@ Status is color-coded: green for OK, yellow for WARN, red for CRIT.
 ### Events
 
 ```bash
-printf "_e{21,36}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file" | nc -u -w1 localhost 8125
+printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file" | nc -u -w1 localhost 8125
 ```
 
 ```
