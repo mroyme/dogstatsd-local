@@ -7,7 +7,7 @@ toolchain go1.25.5
 require (
 	github.com/catppuccin/go v0.3.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/charmbracelet/log v0.4.2
+	github.com/charmbracelet/log v1.0.0
 )
 
 require (
