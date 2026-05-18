@@ -16,6 +16,7 @@ import (
 	"github.com/mroyme/dogstatsd-local/internal/format/pretty"
 	"github.com/mroyme/dogstatsd-local/internal/format/raw"
 	"github.com/mroyme/dogstatsd-local/internal/format/short"
+	"github.com/mroyme/dogstatsd-local/internal/forwarder"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"github.com/mroyme/dogstatsd-local/internal/server"
 )
@@ -24,6 +25,7 @@ func main() {
 	host := flag.String("host", "0.0.0.0", "Bind address")
 	port := flag.Int("port", 8125, "Listen port")
 	out := flag.String("out", "pretty", "Output format: json|pretty|raw|short")
+	forward := flag.String("forward", "", "Forward raw datagrams to an upstream DogStatsD server (e.g. 127.0.0.1:8126)")
 	rawTags := flag.String("tags", "", "Extra tags, comma delimited")
 	maxNameWidth := flag.Int("max-name-width", 50,
 		"Maximum length of name. Only used for 'pretty' format, increase if name is truncated."+
@@ -70,11 +72,25 @@ func main() {
 	}
 	messageHandler := asyncMessageHandler.New()
 
+	var forwardFunc func([]byte)
+	var fwd *forwarder.Forwarder
+	if *forward != "" {
+		fwd = &forwarder.Forwarder{
+			Logger:  logger,
+			Address: *forward,
+		}
+		if err := fwd.Start(); err != nil {
+			logger.Fatal("failed to start forwarder", "addr", *forward, "err", err)
+		}
+		logger.Infof("forwarding datagrams to %s", *forward)
+		forwardFunc = fwd.Forward
+	}
+
 	var wg sync.WaitGroup
 
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 	logger.Infof("listening over UDP at %s", addr)
-	srv := server.NewServer(addr, messageHandler.Handle, logger)
+	srv := server.NewServer(addr, messageHandler.Handle, forwardFunc, logger)
 	wg.Add(1)
 	go func(srv server.Server) {
 		defer wg.Done()
@@ -89,6 +105,11 @@ func main() {
 
 	if err := srv.Stop(); err != nil {
 		logger.Error(err)
+	}
+	if fwd != nil {
+		if err := fwd.Stop(); err != nil {
+			logger.Error(err)
+		}
 	}
 	wg.Wait()
 	messageHandler.Stop()
