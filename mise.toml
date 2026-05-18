@@ -2,6 +2,7 @@
 go = "1.26"
 uv = "latest"
 gofumpt = "latest"
+git-lfs = "latest"
 
 [tasks.build]
 description = "Build the binary"
@@ -33,15 +34,15 @@ depends = ["fmt", "fix", "vet", "lint", "test"]
 
 [tasks.docs]
 description = "Build documentation site"
-run = "uv run mkdocs build"
+run = "git lfs pull && uv run mkdocs build"
 
 [tasks.docs-serve]
 description = "Serve documentation site locally"
-run = "uv run mkdocs serve"
+run = "git lfs pull && uv run mkdocs serve"
 
 [tasks.docs-deploy]
 description = "Deploy documentation to GitHub Pages"
-run = "uv run mkdocs gh-deploy --force"
+run = "git lfs pull && uv run mkdocs gh-deploy --force"
 
 [tasks.clean]
 description = "Remove build artifacts"

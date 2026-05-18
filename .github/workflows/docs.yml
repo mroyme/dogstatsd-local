@@ -19,5 +19,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
-      - run: uv sync
+      - run: uv sync --frozen
       - run: uv run mkdocs gh-deploy --force
