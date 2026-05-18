@@ -20,26 +20,24 @@ func TestServerReceivesMessages(t *testing.T) {
 
 	srv := NewServer("127.0.0.1:0", handler, log.Default())
 
-	done := make(chan error, 1)
 	go func() {
-		done <- srv.Listen()
+		_ = srv.Listen()
 	}()
 
 	// Give the server a moment to start listening
 	time.Sleep(100 * time.Millisecond)
 
-	// We need to get the actual allocated port — resolve it from the server
-	// Since our server doesn't expose the addr, we'll use a fixed port for testing
-	// Stop the server and restart with a known port
-	srv.Stop()
+	// Since the server doesn't expose the addr, restart with a known port
+	if err := srv.Stop(); err != nil {
+		t.Fatalf("failed to stop server: %v", err)
+	}
 
-	// Use a known available port
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
 
 	srv = NewServer(addr, handler, log.Default())
 	go func() {
-		done <- srv.Listen()
+		_ = srv.Listen()
 	}()
 	time.Sleep(100 * time.Millisecond)
 
@@ -47,7 +45,7 @@ func TestServerReceivesMessages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	_, err = conn.Write([]byte("page.views:1|c"))
 	if err != nil {
@@ -57,7 +55,9 @@ func TestServerReceivesMessages(t *testing.T) {
 	// Give the server time to process
 	time.Sleep(200 * time.Millisecond)
 
-	srv.Stop()
+	if err := srv.Stop(); err != nil {
+		t.Fatalf("failed to stop server: %v", err)
+	}
 
 	if got := received.Load(); got != 1 {
 		t.Errorf("received %d messages, want 1", got)
@@ -87,7 +87,7 @@ func TestServerSplitsMultiMessageDatagrams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Send multiple messages in a single datagram separated by newlines
 	_, err = conn.Write([]byte("page.views:1|c\nfuel.level:0.5|g"))
@@ -97,7 +97,9 @@ func TestServerSplitsMultiMessageDatagrams(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	srv.Stop()
+	if err := srv.Stop(); err != nil {
+		t.Fatalf("failed to stop server: %v", err)
+	}
 
 	if got := received.Load(); got != 2 {
 		t.Errorf("received %d messages, want 2", got)
@@ -136,7 +138,7 @@ func TestServerStripsCarriageReturns(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Send message with trailing \r
 	_, err = conn.Write([]byte("page.views:1|c\r\n"))
@@ -146,7 +148,9 @@ func TestServerStripsCarriageReturns(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	srv.Stop()
+	if err := srv.Stop(); err != nil {
+		t.Fatalf("failed to stop server: %v", err)
+	}
 
 	if got := received.Load(); got != 1 {
 		t.Errorf("received %d messages, want 1", got)
@@ -167,8 +171,7 @@ func TestServerStops(t *testing.T) {
 	}()
 	time.Sleep(100 * time.Millisecond)
 
-	err := srv.Stop()
-	if err != nil {
+	if err := srv.Stop(); err != nil {
 		t.Errorf("Stop() returned error: %v", err)
 	}
 }
@@ -183,6 +186,6 @@ func findAvailablePort(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	return fmt.Sprintf("%d", conn.LocalAddr().(*net.UDPAddr).Port)
 }
