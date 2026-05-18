@@ -8,8 +8,16 @@ go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
 
 ## Docker
 
+### Docker Hub
+
 ```bash
 docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
+```
+
+### GHCR
+
+```bash
+docker run -it -e "TERM=$TERM" -p 8125:8125/udp ghcr.io/mroyme/dogstatsd-local
 ```
 
 Pass CLI flags via the command:
