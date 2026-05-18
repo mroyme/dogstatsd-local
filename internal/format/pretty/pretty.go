@@ -2,10 +2,11 @@ package pretty
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"strings"
 )
 
 type Handler struct {
@@ -46,6 +47,17 @@ func (h *Handler) New() messages.OutputHandler {
 			str += h.StyledServiceCheckHostname(sc)
 			str += h.StyledServiceCheckMessage(sc)
 			str += h.StyledServiceCheckTags(sc, h.ExtraTags)
+			fmt.Println(str)
+
+		case messages.EventMessageType:
+			ev, ok := dMsg.(messages.DogStatsDEvent)
+			if !ok {
+				return nil
+			}
+			str := h.StyledEventAlertType(ev)
+			str += h.StyledEventTitle(ev, h.NameWidth)
+			str += h.StyledEventText(ev)
+			str += h.StyledEventTags(ev, h.ExtraTags)
 			fmt.Println(str)
 		}
 
@@ -183,7 +195,6 @@ func (h *Handler) StyledServiceCheckMessage(sc messages.DogStatsDServiceCheck) s
 	}
 	style := lipgloss.NewStyle().
 		Width(30).
-		MaxWidth(30).
 		Foreground(h.Theme.Subtext1())
 	return style.Render(sc.Message)
 }
@@ -193,4 +204,51 @@ func (h *Handler) StyledServiceCheckTags(sc messages.DogStatsDServiceCheck, extr
 		Foreground(h.Theme.Overlay0()).
 		Italic(true)
 	return style.SetString(append(extraTags, sc.Tags...)...).Render()
+}
+
+func (h *Handler) StyledEventAlertType(ev messages.DogStatsDEvent) string {
+	var fg lipgloss.AdaptiveColor
+	switch ev.AlertType {
+	case messages.EventAlertTypeError:
+		fg = h.Theme.Red()
+	case messages.EventAlertTypeWarning:
+		fg = h.Theme.Yellow()
+	case messages.EventAlertTypeSuccess:
+		fg = h.Theme.Green()
+	default:
+		fg = h.Theme.Blue()
+	}
+	style := lipgloss.NewStyle().
+		Width(11).
+		Underline(true).
+		Foreground(fg)
+	return style.Render(strings.ToUpper(string(ev.AlertType)))
+}
+
+func (h *Handler) StyledEventTitle(ev messages.DogStatsDEvent, width int) string {
+	if width < 50 {
+		width = 50
+	}
+	text := lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Pink()).Render(ev.Title)
+	return lipgloss.NewStyle().
+		Width(width).
+		MaxWidth(width).
+		Render(text)
+}
+
+func (h *Handler) StyledEventText(ev messages.DogStatsDEvent) string {
+	if ev.Text == "" {
+		return ""
+	}
+	style := lipgloss.NewStyle().
+		Width(30).
+		Foreground(h.Theme.Subtext1())
+	return style.Render(ev.Text)
+}
+
+func (h *Handler) StyledEventTags(ev messages.DogStatsDEvent, extraTags []string) string {
+	style := lipgloss.NewStyle().
+		Foreground(h.Theme.Overlay0()).
+		Italic(true)
+	return style.SetString(append(extraTags, ev.Tags...)...).Render()
 }

@@ -55,13 +55,13 @@ func TestParseDogStatsDMetricMessage(t *testing.T) {
 			wantRate:  1.0,
 		},
 		{
-			name:      "timer with duration",
-			input:     "request.time:150|ms",
-			wantNs:    "request",
-			wantName:  "time",
-			wantType:  TimerMetricType,
-			wantValue: 150.0,
-			wantRate:  1.0,
+			name:         "timer with duration",
+			input:        "request.time:150|ms",
+			wantNs:       "request",
+			wantName:     "time",
+			wantType:     TimerMetricType,
+			wantValue:    150.0,
+			wantRate:     1.0,
 			wantDuration: 150 * time.Millisecond,
 		},
 		{
@@ -322,9 +322,127 @@ func TestParseDogStatsDServiceCheckMessage(t *testing.T) {
 }
 
 func TestParseDogStatsDEventMessage(t *testing.T) {
-	msg, err := ParseDogStatsDMessage([]byte("_e{21,36}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file"))
-	if err == nil {
-		t.Errorf("expected error for unsupported event message, got %T", msg)
+	tests := []struct {
+		name           string
+		input          string
+		wantTitle      string
+		wantText       string
+		wantPriority   EventPriority
+		wantAlertType  EventAlertType
+		wantTags       []string
+		wantHostname   string
+		wantAggKey     string
+		wantSourceType string
+		wantErr        bool
+	}{
+		{
+			name:          "simple event",
+			input:         "_e{6,15}:title1|text with pipes",
+			wantTitle:     "title1",
+			wantText:      "text with pipes",
+			wantPriority:  EventPriorityNormal,
+			wantAlertType: EventAlertTypeInfo,
+			wantTags:      []string{},
+		},
+		{
+			name:          "event with tags and alert type",
+			input:         "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file",
+			wantTitle:     "An exception occurred",
+			wantText:      "Cannot parse CSV file",
+			wantPriority:  EventPriorityNormal,
+			wantAlertType: EventAlertTypeWarning,
+			wantTags:      []string{"err_type:bad_file"},
+		},
+		{
+			name:           "event with all fields",
+			input:          "_e{5,17}:title|Cannot parse JSON|h:host1|p:low|t:error|k:aggkey1|s:source1|#env:prod,region:us",
+			wantTitle:      "title",
+			wantText:       "Cannot parse JSON",
+			wantPriority:   EventPriorityLow,
+			wantAlertType:  EventAlertTypeError,
+			wantHostname:   "host1",
+			wantAggKey:     "aggkey1",
+			wantSourceType: "source1",
+			wantTags:       []string{"env:prod", "region:us"},
+		},
+		{
+			name:          "event with text containing escaped newline",
+			input:         "_e{5,12}:title|line1\\nline2|t:success",
+			wantTitle:     "title",
+			wantText:      "line1\\nline2",
+			wantAlertType: EventAlertTypeSuccess,
+			wantPriority:  EventPriorityNormal,
+			wantTags:      []string{},
+		},
+		{
+			name:    "missing closing brace",
+			input:   "_e{5,12title|text",
+			wantErr: true,
+		},
+		{
+			name:    "missing comma in lengths",
+			input:   "_e{5}:title|text",
+			wantErr: true,
+		},
+		{
+			name:    "non-numeric title length",
+			input:   "_e{abc,3}:title|text",
+			wantErr: true,
+		},
+		{
+			name:    "title length exceeds payload",
+			input:   "_e{100,3}:title|text",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg, err := ParseDogStatsDMessage([]byte(tt.input))
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			ev, ok := msg.(DogStatsDEvent)
+			if !ok {
+				t.Fatalf("expected DogStatsDEvent, got %T", msg)
+			}
+			if ev.Title != tt.wantTitle {
+				t.Errorf("Title = %q, want %q", ev.Title, tt.wantTitle)
+			}
+			if ev.Text != tt.wantText {
+				t.Errorf("Text = %q, want %q", ev.Text, tt.wantText)
+			}
+			if ev.Priority != tt.wantPriority {
+				t.Errorf("Priority = %q, want %q", ev.Priority, tt.wantPriority)
+			}
+			if ev.AlertType != tt.wantAlertType {
+				t.Errorf("AlertType = %q, want %q", ev.AlertType, tt.wantAlertType)
+			}
+			if ev.Hostname != tt.wantHostname {
+				t.Errorf("Hostname = %q, want %q", ev.Hostname, tt.wantHostname)
+			}
+			if ev.AggregationKey != tt.wantAggKey {
+				t.Errorf("AggregationKey = %q, want %q", ev.AggregationKey, tt.wantAggKey)
+			}
+			if ev.SourceType != tt.wantSourceType {
+				t.Errorf("SourceType = %q, want %q", ev.SourceType, tt.wantSourceType)
+			}
+			if len(ev.Tags) != len(tt.wantTags) {
+				t.Errorf("Tags = %v, want %v", ev.Tags, tt.wantTags)
+			} else {
+				for i, tag := range ev.Tags {
+					if tag != tt.wantTags[i] {
+						t.Errorf("Tags[%d] = %q, want %q", i, tag, tt.wantTags[i])
+					}
+				}
+			}
+		})
 	}
 }
 
@@ -398,19 +516,34 @@ func TestDogStatsDMessageType(t *testing.T) {
 	if scMsg.Type() != ServiceCheckMessageType {
 		t.Errorf("service check Type() = %v, want %v", scMsg.Type(), ServiceCheckMessageType)
 	}
-}
 
-func TestDogStatsDMessageData(t *testing.T) {
-	raw := []byte("_sc|my_service|0|#env:prod")
-	msg, err := ParseDogStatsDMessage(raw)
+	evMsg, err := ParseDogStatsDMessage([]byte("_e{5,4}:title|text"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	sc, ok := msg.(DogStatsDServiceCheck)
-	if !ok {
-		t.Fatalf("expected DogStatsDServiceCheck, got %T", msg)
+	if evMsg.Type() != EventMessageType {
+		t.Errorf("event Type() = %v, want %v", evMsg.Type(), EventMessageType)
 	}
-	if string(sc.Data()) != string(raw) {
-		t.Errorf("Data() = %q, want %q", sc.Data(), raw)
+}
+
+func TestDogStatsDMessageData(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"service check", "_sc|my_service|0|#env:prod"},
+		{"event", "_e{5,4}:title|text"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := []byte(tt.input)
+			msg, err := ParseDogStatsDMessage(raw)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if string(msg.Data()) != string(raw) {
+				t.Errorf("Data() = %q, want %q", msg.Data(), raw)
+			}
+		})
 	}
 }

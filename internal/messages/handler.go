@@ -2,8 +2,9 @@ package messages
 
 import (
 	"errors"
-	"github.com/charmbracelet/log"
 	"sync"
+
+	"github.com/charmbracelet/log"
 )
 
 type OutputHandler func([]byte) error
