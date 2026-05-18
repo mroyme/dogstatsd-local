@@ -84,7 +84,9 @@ func (u *udpServer) Listen() error {
 
 		// forward the raw datagram to an upstream DogStatsD server
 		if u.forward != nil {
-			u.forward(buf[:n])
+			datagram := make([]byte, n)
+			copy(datagram, buf[:n])
+			u.forward(datagram)
 		}
 
 		// copy the message and pass it to the format function

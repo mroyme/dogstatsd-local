@@ -161,6 +161,71 @@ func TestServerStripsCarriageReturns(t *testing.T) {
 	}
 }
 
+func TestServerForwardsDatagrams(t *testing.T) {
+	var received atomic.Int32
+	var messages [][]byte
+
+	handler := func(msg []byte) error {
+		return nil
+	}
+
+	forward := func(datagram []byte) {
+		received.Add(1)
+		cp := make([]byte, len(datagram))
+		copy(cp, datagram)
+		messages = append(messages, cp)
+	}
+
+	port := findAvailablePort(t)
+	addr := "127.0.0.1:" + port
+
+	srv := NewServer(addr, handler, forward, log.Default())
+	go func() {
+		_ = srv.Listen()
+	}()
+	time.Sleep(100 * time.Millisecond)
+
+	conn, err := net.Dial("udp", addr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer func() { _ = conn.Close() }()
+
+	// Single message
+	_, err = conn.Write([]byte("page.views:1|c"))
+	if err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+
+	// Multi-message datagram with \r\n
+	_, err = conn.Write([]byte("fuel.level:0.5|g\r\nsong.length:240|h"))
+	if err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+
+	time.Sleep(200 * time.Millisecond)
+
+	if err := srv.Stop(); err != nil {
+		t.Fatalf("failed to stop server: %v", err)
+	}
+
+	if got := received.Load(); got != 2 {
+		t.Errorf("forwarded %d datagrams, want 2", got)
+	}
+
+	if len(messages) >= 1 {
+		if string(messages[0]) != "page.views:1|c" {
+			t.Errorf("messages[0] = %q, want %q", messages[0], "page.views:1|c")
+		}
+	}
+	if len(messages) >= 2 {
+		// Raw datagrams are forwarded as-is, including \r\n
+		if string(messages[1]) != "fuel.level:0.5|g\r\nsong.length:240|h" {
+			t.Errorf("messages[1] = %q, want %q", messages[1], "fuel.level:0.5|g\r\nsong.length:240|h")
+		}
+	}
+}
+
 func TestServerStops(t *testing.T) {
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
