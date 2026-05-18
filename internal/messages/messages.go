@@ -12,7 +12,7 @@ type DogStatsDMetricType int
 
 const (
 	GaugeMetricType DogStatsDMetricType = iota
-	CounterMetricType
+	CountMetricType
 	SetMetricType
 	TimerMetricType
 	HistogramMetricType
@@ -23,8 +23,8 @@ func (d DogStatsDMetricType) String() string {
 	switch d {
 	case GaugeMetricType:
 		return "gauge"
-	case CounterMetricType:
-		return "counter"
+	case CountMetricType:
+		return "count"
 	case SetMetricType:
 		return "set"
 	case TimerMetricType:
@@ -93,9 +93,9 @@ func (s ServiceCheckStatus) String() string {
 	case ServiceCheckOK:
 		return "OK"
 	case ServiceCheckWarning:
-		return "WARNING"
+		return "WARN"
 	case ServiceCheckCritical:
-		return "CRITICAL"
+		return "CRIT"
 	case ServiceCheckUnknown:
 		return "UNKNOWN"
 	}
@@ -203,7 +203,7 @@ func parseDogStatsDMetricMessage(buf []byte) (DogStatsDMessage, error) {
 
 	switch pieces[1] {
 	case "c":
-		metric.MetricType = CounterMetricType
+		metric.MetricType = CountMetricType
 	case "g":
 		metric.MetricType = GaugeMetricType
 	case "s":

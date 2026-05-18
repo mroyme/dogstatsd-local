@@ -64,7 +64,7 @@ Running **dogstatsd-local** with the `-out pretty` flag will parse the UDP packe
 
 ```bash
 $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out pretty
-COUNTER    namespace | metric                                1.00            test
+COUNT        namespace | metric                                1.00            test
 ```
 
 When sending a service check:
@@ -73,10 +73,10 @@ When sending a service check:
 $ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s" | nc -cu  localhost 8125
 ```
 
-The output is colorized by status (green=OK, yellow=WARNING, red=CRITICAL):
+The output is colorized by status (green=OK, yellow=WARN, red=CRIT):
 
 ```bash
-CRITICAL   Redis connection                       Redis connection timed out after 10s  env:dev
+CRIT        Redis connection                       Redis connection timed out after 10s  env:dev
 ```
 
 When sending an event:
@@ -88,7 +88,7 @@ $ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t
 The output is colorized by alert type (blue=info, yellow=warning, red=error, green=success):
 
 ```bash
-WARNING    An exception occurred                  Cannot parse CSV file from 10.0.0.17  err_type:bad_file
+WARN        An exception occurred                  Cannot parse CSV file from 10.0.0.17  err_type:bad_file
 ```
 
 The output will be colored if your shell supports colors.
@@ -137,7 +137,7 @@ $ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s
 ```
 
 ```bash
-service_check:Redis connection|CRITICAL|msg:Redis connection timed out after 10s env:dev
+service_check:Redis connection|CRIT|msg:Redis connection timed out after 10s env:dev
 ```
 
 When sending an event:
@@ -174,7 +174,7 @@ $ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s
 $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
 {
   "name": "Redis connection",
-  "status": "CRITICAL",
+  "status": "CRIT",
   "message": "Redis connection timed out after 10s",
   "tags": [
     "env:dev"
