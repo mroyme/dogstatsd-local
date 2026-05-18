@@ -6,7 +6,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
 > A local implementation of the DogStatsD protocol from [Datadog](https://www.datadoghq.com)
->
+
 > [!NOTE]
 > Started as a fork of [jonmorehouse/dogstatsd-local](https://github.com/jonmorehouse/dogstatsd-local), which was no longer receiving updates. Since then, this project has diverged significantly — adding service check and event support, multiple output formats, Catppuccin-themed colors, metric forwarding, and more.
 
@@ -182,7 +182,24 @@ Use `-forward` to proxy all datagrams to an upstream DogStatsD server while stil
 dogstatsd-local -forward 127.0.0.1:8126
 ```
 
-This is useful for debugging in environments where you still want metrics to reach Datadog.
+This lets you run dogstatsd-local as a **middleware** between your application and Datadog — point your app at dogstatsd-local, and it transparently forwards everything to the real Datadog agent while printing each metric locally for debugging. No metrics are lost, and you get full visibility into what's being sent.
+
+```bash
+# Your app → dogstatsd-local (port 8125) → Datadog agent (port 8126)
+dogstatsd-local -port 8125 -forward 127.0.0.1:8126
+```
+
+You can even chain two instances with different output formats — one for pretty printing and one for raw passthrough:
+
+```bash
+# Pretty output + forward to a second instance
+# Instance 1: pretty output, forwards to instance 2
+dogstatsd-local -port 8125 -out pretty -forward 127.0.0.1:8126 &
+
+# Instance 2: raw output, forwards to Datadog agent
+dogstatsd-local -port 8126 -out raw -forward 127.0.0.1:8127 &
+# Datadog agent listening on 8127
+```
 
 ## DogStatsD Protocol
 
