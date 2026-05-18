@@ -1,0 +1,47 @@
+[tools]
+go = "1.26"
+uv = "latest"
+
+[tasks.build]
+description = "Build the binary"
+run = "go build -o bin/dogstatsd-local ./cmd/dogstatsd-local/main.go"
+
+[tasks.test]
+description = "Run all tests"
+run = "go test -race ./..."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run"
+
+[tasks.fmt]
+description = "Format Go code"
+run = "gofumpt -w ."
+
+[tasks.fix]
+description = "Run go fix on all packages"
+run = "go fix ./..."
+
+[tasks.vet]
+description = "Run go vet"
+run = "go vet ./..."
+
+[tasks.check]
+description = "Run all checks (fmt, vet, lint, test)"
+depends = ["fmt", "fix", "vet", "lint", "test"]
+
+[tasks.docs]
+description = "Build documentation site"
+run = "uv run mkdocs build"
+
+[tasks.docs-serve]
+description = "Serve documentation site locally"
+run = "uv run mkdocs serve"
+
+[tasks.docs-deploy]
+description = "Deploy documentation to GitHub Pages"
+run = "uv run mkdocs gh-deploy --force"
+
+[tasks.clean]
+description = "Remove build artifacts"
+run = "rm -rf bin/ site/"

@@ -2,6 +2,8 @@
 
 A local DogStatsD protocol inspector. Listen on a UDP socket, parse metrics, service checks, and events, and print them to stdout in your choice of format.
 
+[![Get started](https://shields.io/badge/Get%20Started-docs-3f51b5?style=for-the-badge)](https://mroyme.github.io/dogstatsd-local/)
+
 ## Why?
 
 Datadog is great for production metric aggregation. **dogstatsd-local** lets you inspect and debug metrics _before_ sending them to Datadog — no account required, no agent needed, no metrics polluted.
@@ -38,7 +40,6 @@ Full documentation is available at [mroyme.github.io/dogstatsd-local](https://mr
 - [Output Formats](https://mroyme.github.io/dogstatsd-local/output-formats/)
 - [Forwarding](https://mroyme.github.io/dogstatsd-local/forwarding/)
 - [Protocol Reference](https://mroyme.github.io/dogstatsd-local/protocol/)
-- [Contributing](https://mroyme.github.io/dogstatsd-local/contributing/)
 
 ## Acknowledgments
 

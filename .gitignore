@@ -117,3 +117,9 @@ go.work
 # Build output
 bin/
 
+# MkDocs build output
+site/
+
+# uv
+.venv/
+uv.lock
