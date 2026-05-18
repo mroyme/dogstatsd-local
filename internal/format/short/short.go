@@ -2,6 +2,7 @@ package short
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 )
@@ -55,6 +56,32 @@ func (h *Handler) New() messages.OutputHandler {
 			}
 
 			for _, tag := range append(h.ExtraTags, sc.Tags...) {
+				str += " " + tag
+			}
+
+			fmt.Println(str)
+
+		case messages.EventMessageType:
+			ev, ok := dMsg.(messages.DogStatsDEvent)
+			if !ok {
+				return nil
+			}
+
+			str := fmt.Sprintf("event:%s", ev.Title)
+			if ev.Text != "" {
+				str += "|" + ev.Text
+			}
+			if ev.Priority != "" {
+				str += "|priority:" + string(ev.Priority)
+			}
+			if ev.AlertType != "" {
+				str += "|alert:" + string(ev.AlertType)
+			}
+			if ev.Hostname != "" {
+				str += "|host:" + ev.Hostname
+			}
+
+			for _, tag := range append(h.ExtraTags, ev.Tags...) {
 				str += " " + tag
 			}
 

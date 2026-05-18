@@ -3,6 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"time"
+
 	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/format"
@@ -12,11 +18,6 @@ import (
 	"github.com/mroyme/dogstatsd-local/internal/format/short"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 	"github.com/mroyme/dogstatsd-local/internal/server"
-	"os"
-	"os/signal"
-	"strings"
-	"sync"
-	"time"
 )
 
 func main() {

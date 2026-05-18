@@ -79,6 +79,18 @@ The output is colorized by status (green=OK, yellow=WARNING, red=CRITICAL):
 CRITICAL   Redis connection                       Redis connection timed out after 10s  env:dev
 ```
 
+When sending an event:
+
+```bash
+$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```
+
+The output is colorized by alert type (blue=info, yellow=warning, red=error, green=success):
+
+```bash
+WARNING    An exception occurred                  Cannot parse CSV file from 10.0.0.17  err_type:bad_file
+```
+
 The output will be colored if your shell supports colors.
 If colors aren't displayed properly, ensure that `TERM` is set correctly in your environment.
 
@@ -127,6 +139,16 @@ $ printf "_sc|Redis connection|2|#env:dev|m:Redis connection timed out after 10s
 service_check:Redis connection|CRITICAL|msg:Redis connection timed out after 10s env:dev
 ```
 
+When sending an event:
+
+```bash
+$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```
+
+```bash
+event:An exception occurred|Cannot parse CSV file from 10.0.0.17|priority:normal|alert:warning err_type:bad_file
+```
+
 ### JSON
 
 When writing a metric such as:
@@ -160,6 +182,26 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out js
 }
 ```
 
+When sending an event:
+
+```bash
+$ printf "_e{21,36}:An exception occurred|Cannot parse CSV file from 10.0.0.17|t:warning|#err_type:bad_file" | nc -cu  localhost 8125
+```
+
+```bash
+$ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json | jq .
+{
+  "title": "An exception occurred",
+  "text": "Cannot parse CSV file from 10.0.0.17",
+  "priority": "normal",
+  "alert_type": "warning",
+  "tags": [
+    "err_type:bad_file"
+  ],
+  "timestamp": 1656581400
+}
+```
+
 **dogstatsd-local** can be piped to any process that understands json via stdin. For example, to pretty print JSON with [jq](https://stedolan.github.io/jq/):
 
 ```bash
@@ -181,5 +223,4 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out js
 
 ## TODO
 
-- [ ] support datadog events
 - [ ] support interval aggregation of percentiles

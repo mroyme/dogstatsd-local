@@ -3,9 +3,10 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"os"
 )
 
 type Handler struct {
@@ -19,6 +20,8 @@ func (h *Handler) New() messages.OutputHandler {
 		if err != nil {
 			h.Logger.Error(err)
 		}
+
+		enc := json.NewEncoder(os.Stdout)
 
 		switch dMsg.Type() {
 		case messages.MetricMessageType:
@@ -38,7 +41,6 @@ func (h *Handler) New() messages.OutputHandler {
 				Tags:       append(h.ExtraTags, metric.Tags...),
 			}
 
-			enc := json.NewEncoder(os.Stdout)
 			if err := enc.Encode(&jsonMsg); err != nil {
 				h.Logger.Error("JSON serialize error:", err)
 			}
@@ -59,7 +61,29 @@ func (h *Handler) New() messages.OutputHandler {
 				Timestamp: sc.Timestamp.Unix(),
 			}
 
-			enc := json.NewEncoder(os.Stdout)
+			if err := enc.Encode(&jsonMsg); err != nil {
+				h.Logger.Error("JSON serialize error:", err)
+			}
+
+		case messages.EventMessageType:
+			ev, ok := dMsg.(messages.DogStatsDEvent)
+			if !ok {
+				h.Logger.Error("could not match message to event")
+				return nil
+			}
+
+			jsonMsg := jsonEvent{
+				Title:          ev.Title,
+				Text:           ev.Text,
+				Priority:       string(ev.Priority),
+				AlertType:      string(ev.AlertType),
+				AggregationKey: ev.AggregationKey,
+				SourceType:     ev.SourceType,
+				Hostname:       ev.Hostname,
+				Tags:           append(h.ExtraTags, ev.Tags...),
+				Timestamp:      ev.Timestamp.Unix(),
+			}
+
 			if err := enc.Encode(&jsonMsg); err != nil {
 				h.Logger.Error("JSON serialize error:", err)
 			}
@@ -89,4 +113,16 @@ type jsonServiceCheck struct {
 	Hostname  string   `json:"hostname,omitempty"`
 	Tags      []string `json:"tags"`
 	Timestamp int64    `json:"timestamp"`
+}
+
+type jsonEvent struct {
+	Title          string   `json:"title"`
+	Text           string   `json:"text"`
+	Priority       string   `json:"priority,omitempty"`
+	AlertType      string   `json:"alert_type,omitempty"`
+	AggregationKey string   `json:"aggregation_key,omitempty"`
+	SourceType     string   `json:"source_type,omitempty"`
+	Hostname       string   `json:"hostname,omitempty"`
+	Tags           []string `json:"tags"`
+	Timestamp      int64    `json:"timestamp"`
 }

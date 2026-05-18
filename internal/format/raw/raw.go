@@ -2,6 +2,7 @@ package raw
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/log"
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 )

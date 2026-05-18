@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"net"
 	"sync"
@@ -81,11 +82,19 @@ func (u *udpServer) Listen() error {
 		}
 
 		// copy the message and pass it to the format function
-		msg := make([]byte, n)
-		copy(msg, buf[:n])
-		err = u.msgHandler(msg)
-		if err != nil {
-			return err
+		// DogStatsD supports multiple messages in a single datagram,
+		// separated by newlines (per the statsd/DogStatsD protocol).
+		for _, line := range bytes.Split(buf[:n], []byte("\n")) {
+			line = bytes.TrimRight(line, "\r")
+			if len(line) == 0 {
+				continue
+			}
+			msg := make([]byte, len(line))
+			copy(msg, line)
+			err = u.msgHandler(msg)
+			if err != nil {
+				return err
+			}
 		}
 
 		// respond to the origin connection
