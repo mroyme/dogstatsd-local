@@ -87,7 +87,6 @@ func TestHandlerParsesAllMessageTypes(t *testing.T) {
 }
 
 func TestHandlerLogsParseErrors(t *testing.T) {
-	var logged atomic.Int32
 	logger := log.Default()
 	logger.SetLevel(log.DebugLevel)
 
@@ -115,12 +114,8 @@ func TestHandlerLogsParseErrors(t *testing.T) {
 
 	handler.Stop()
 
-	// The invalid message was logged, the valid one was processed
-	if logged.Load() != 0 {
-		// We can't easily intercept charmbracelet/log output,
-		// but the key assertion is that the handler didn't panic
-		// and the pool kept processing after the error.
-	}
+	// The key assertion is that the handler didn't panic
+	// and the pool kept processing after the parse error.
 }
 
 func TestHandlerCapacityExceeded(t *testing.T) {
