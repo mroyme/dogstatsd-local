@@ -64,9 +64,9 @@ func (h *Handler) StyledMetricType(metric messages.DogStatsDMetric) string {
 	var label string
 	metricType := metric.MetricType
 	switch metricType {
-	case messages.CounterMetricType:
+	case messages.CountMetricType:
 		fg = h.Theme.Green()
-		label = "COUNTER"
+		label = "COUNT"
 	case messages.HistogramMetricType:
 		fg = h.Theme.Blue()
 		label = "HIST"
@@ -203,21 +203,26 @@ func (h *Handler) StyledServiceCheckMessage(sc messages.DogStatsDServiceCheck) s
 
 func (h *Handler) StyledEventAlertType(ev messages.DogStatsDEvent) string {
 	var fg lipgloss.AdaptiveColor
+	var label string
 	switch ev.AlertType {
 	case messages.EventAlertTypeError:
 		fg = h.Theme.Red()
+		label = "ERR"
 	case messages.EventAlertTypeWarning:
 		fg = h.Theme.Yellow()
+		label = "WARN"
 	case messages.EventAlertTypeSuccess:
 		fg = h.Theme.Green()
+		label = "OK"
 	default:
 		fg = h.Theme.Blue()
+		label = "INFO"
 	}
 	style := lipgloss.NewStyle().
 		Width(11).
 		Underline(true).
 		Foreground(fg)
-	return style.Render(strings.ToUpper(string(ev.AlertType)))
+	return style.Render(label)
 }
 
 func (h *Handler) StyledEventTitle(ev messages.DogStatsDEvent, width int) string {
