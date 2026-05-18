@@ -117,3 +117,10 @@ go.work
 # Build output
 bin/
 
+# MkDocs build output
+site/
+
+# uv
+.venv/
+__pycache__/
+

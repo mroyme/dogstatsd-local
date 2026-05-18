@@ -29,17 +29,6 @@ COUNT      page | views                                      1.00           env:
 - **Catppuccin colors** — pretty format adapts to light/dark terminal themes
 - **Zero dependencies** — single binary, no Datadog account needed
 
-## Documentation
-
-Full documentation is available at [mroyme.github.io/dogstatsd-local](https://mroyme.github.io/dogstatsd-local/).
-
-- [Installation](https://mroyme.github.io/dogstatsd-local/installation/)
-- [Configuration](https://mroyme.github.io/dogstatsd-local/configuration/)
-- [Output Formats](https://mroyme.github.io/dogstatsd-local/output-formats/)
-- [Forwarding](https://mroyme.github.io/dogstatsd-local/forwarding/)
-- [Protocol Reference](https://mroyme.github.io/dogstatsd-local/protocol/)
-- [Contributing](https://mroyme.github.io/dogstatsd-local/contributing/)
-
 ## Acknowledgments
 
 Started as a fork of [jonmorehouse/dogstatsd-local](https://github.com/jonmorehouse/dogstatsd-local), which was no longer receiving updates. Since then, this project has diverged significantly — adding service check and event support, multiple output formats, Catppuccin-themed colors, metric forwarding, and more.
