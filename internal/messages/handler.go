@@ -23,7 +23,7 @@ func (h *Handler) New() *Handler {
 	h.wg.Add(h.PoolSize)
 
 	// build a pool of goroutines to listen for messages to process
-	for i := 0; i < h.PoolSize; i++ {
+	for range h.PoolSize {
 		go func() {
 			defer h.wg.Done()
 			for raw := range h.msgCh {
