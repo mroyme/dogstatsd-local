@@ -7,6 +7,9 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mroyme/dogstatsd-local?logo=docker)](https://hub.docker.com/r/mroyme/dogstatsd-local)
 
 > A local DogStatsD protocol inspector for debugging metrics, service checks, and events
+>
+> [!TIP]
+> Full documentation available [here](https://mroyme.github.io/dogstatsd-local/)
 
 ```
 dogstatsd-local
