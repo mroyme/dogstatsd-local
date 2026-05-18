@@ -18,27 +18,21 @@ type Handler struct {
 }
 
 func (h *Handler) New() messages.OutputHandler {
-	return func(msg []byte) error {
-		dMsg, err := messages.ParseDogStatsDMessage(msg)
-		if err != nil {
-			h.Logger.Error(err)
-			return nil
-		}
-
-		switch dMsg.Type() {
+	return func(msg messages.DogStatsDMessage) error {
+		switch msg.Type() {
 		case messages.MetricMessageType:
-			metric, ok := dMsg.(messages.DogStatsDMetric)
+			metric, ok := msg.(messages.DogStatsDMetric)
 			if !ok {
 				return nil
 			}
 			str := h.StyledMetricType(metric)
 			str += h.StyledMetricName(metric, h.NameWidth)
 			str += h.StyledMetricValue(metric, h.ValueWidth)
-			str += h.StyledTags(metric, h.ExtraTags)
+			str += h.StyledTags(metric.Tags, h.ExtraTags)
 			fmt.Println(str)
 
 		case messages.ServiceCheckMessageType:
-			sc, ok := dMsg.(messages.DogStatsDServiceCheck)
+			sc, ok := msg.(messages.DogStatsDServiceCheck)
 			if !ok {
 				return nil
 			}
@@ -46,18 +40,18 @@ func (h *Handler) New() messages.OutputHandler {
 			str += h.StyledServiceCheckName(sc, h.NameWidth)
 			str += h.StyledServiceCheckHostname(sc)
 			str += h.StyledServiceCheckMessage(sc)
-			str += h.StyledServiceCheckTags(sc, h.ExtraTags)
+			str += h.StyledTags(sc.Tags, h.ExtraTags)
 			fmt.Println(str)
 
 		case messages.EventMessageType:
-			ev, ok := dMsg.(messages.DogStatsDEvent)
+			ev, ok := msg.(messages.DogStatsDEvent)
 			if !ok {
 				return nil
 			}
 			str := h.StyledEventAlertType(ev)
 			str += h.StyledEventTitle(ev, h.NameWidth)
 			str += h.StyledEventText(ev)
-			str += h.StyledEventTags(ev, h.ExtraTags)
+			str += h.StyledTags(ev.Tags, h.ExtraTags)
 			fmt.Println(str)
 		}
 
@@ -67,30 +61,39 @@ func (h *Handler) New() messages.OutputHandler {
 
 func (h *Handler) StyledMetricType(metric messages.DogStatsDMetric) string {
 	var fg lipgloss.AdaptiveColor
+	var label string
 	metricType := metric.MetricType
 	switch metricType {
 	case messages.CounterMetricType:
 		fg = h.Theme.Green()
+		label = "COUNTER"
 	case messages.HistogramMetricType:
 		fg = h.Theme.Blue()
+		label = "HIST"
+	case messages.DistributionMetricType:
+		fg = h.Theme.Sky()
+		label = "DISTR"
 	case messages.GaugeMetricType:
 		fg = h.Theme.Teal()
+		label = "GAUGE"
 	case messages.TimerMetricType:
 		fg = h.Theme.Mauve()
+		label = "TIMER"
 	case messages.SetMetricType:
 		fg = h.Theme.Pink()
+		label = "SET"
 	default:
 		fg = h.Theme.Text()
+		label = strings.ToUpper(metricType.String())
 	}
 	style := lipgloss.NewStyle().
 		Width(11).
 		Underline(true).
 		Foreground(fg)
-	return style.Render(strings.ToUpper(metricType.String()))
+	return style.Render(label)
 }
 
 func (h *Handler) StyledMetricName(metric messages.DogStatsDMetric, width int) string {
-	// Minimum supported width is 50
 	if width < 50 {
 		width = 50
 	}
@@ -100,7 +103,6 @@ func (h *Handler) StyledMetricName(metric messages.DogStatsDMetric, width int) s
 	lenName := len(name)
 	textLen := lenNamespace + lenName
 
-	// 3 for the separator " | " + 1 for gap with the next field
 	if textLen > width-4 {
 		diff := textLen - (width - 4)
 		if lenName-diff > 20 {
@@ -143,11 +145,11 @@ func (h *Handler) StyledMetricValue(metric messages.DogStatsDMetric, width int) 
 	return style.Render(value)
 }
 
-func (h *Handler) StyledTags(metric messages.DogStatsDMetric, extraTags []string) string {
+func (h *Handler) StyledTags(tags []string, extraTags []string) string {
 	style := lipgloss.NewStyle().
 		Foreground(h.Theme.Overlay0()).
 		Italic(true)
-	return style.SetString(append(extraTags, metric.Tags...)...).Render()
+	return style.SetString(append(extraTags, tags...)...).Render()
 }
 
 func (h *Handler) StyledServiceCheckStatus(sc messages.DogStatsDServiceCheck) string {
@@ -199,13 +201,6 @@ func (h *Handler) StyledServiceCheckMessage(sc messages.DogStatsDServiceCheck) s
 	return style.Render(sc.Message)
 }
 
-func (h *Handler) StyledServiceCheckTags(sc messages.DogStatsDServiceCheck, extraTags []string) string {
-	style := lipgloss.NewStyle().
-		Foreground(h.Theme.Overlay0()).
-		Italic(true)
-	return style.SetString(append(extraTags, sc.Tags...)...).Render()
-}
-
 func (h *Handler) StyledEventAlertType(ev messages.DogStatsDEvent) string {
 	var fg lipgloss.AdaptiveColor
 	switch ev.AlertType {
@@ -244,11 +239,4 @@ func (h *Handler) StyledEventText(ev messages.DogStatsDEvent) string {
 		Width(30).
 		Foreground(h.Theme.Subtext1())
 	return style.Render(ev.Text)
-}
-
-func (h *Handler) StyledEventTags(ev messages.DogStatsDEvent, extraTags []string) string {
-	style := lipgloss.NewStyle().
-		Foreground(h.Theme.Overlay0()).
-		Italic(true)
-	return style.SetString(append(extraTags, ev.Tags...)...).Render()
 }

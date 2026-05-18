@@ -46,6 +46,15 @@ func TestParseDogStatsDMetricMessage(t *testing.T) {
 			wantRate:  0.5,
 		},
 		{
+			name:      "distribution metric",
+			input:     "page.views:1:2:32|d",
+			wantNs:    "page",
+			wantName:  "views",
+			wantType:  DistributionMetricType,
+			wantValue: 1.0,
+			wantRate:  1.0,
+		},
+		{
 			name:      "set metric",
 			input:     "users.uniques:1234|s",
 			wantNs:    "users",
@@ -456,6 +465,7 @@ func TestDogStatsDMetricTypeString(t *testing.T) {
 		{SetMetricType, "set"},
 		{TimerMetricType, "timer"},
 		{HistogramMetricType, "histogram"},
+		{DistributionMetricType, "distribution"},
 		{DogStatsDMetricType(99), "unknown"},
 	}
 	for _, tt := range tests {

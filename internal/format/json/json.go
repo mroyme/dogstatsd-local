@@ -15,17 +15,12 @@ type Handler struct {
 }
 
 func (h *Handler) New() messages.OutputHandler {
-	return func(msg []byte) error {
-		dMsg, err := messages.ParseDogStatsDMessage(msg)
-		if err != nil {
-			h.Logger.Error(err)
-		}
-
+	return func(msg messages.DogStatsDMessage) error {
 		enc := json.NewEncoder(os.Stdout)
 
-		switch dMsg.Type() {
+		switch msg.Type() {
 		case messages.MetricMessageType:
-			metric, ok := dMsg.(messages.DogStatsDMetric)
+			metric, ok := msg.(messages.DogStatsDMetric)
 			if !ok {
 				h.Logger.Error("could not match message to metric")
 				return nil
@@ -46,7 +41,7 @@ func (h *Handler) New() messages.OutputHandler {
 			}
 
 		case messages.ServiceCheckMessageType:
-			sc, ok := dMsg.(messages.DogStatsDServiceCheck)
+			sc, ok := msg.(messages.DogStatsDServiceCheck)
 			if !ok {
 				h.Logger.Error("could not match message to service check")
 				return nil
@@ -66,7 +61,7 @@ func (h *Handler) New() messages.OutputHandler {
 			}
 
 		case messages.EventMessageType:
-			ev, ok := dMsg.(messages.DogStatsDEvent)
+			ev, ok := msg.(messages.DogStatsDEvent)
 			if !ok {
 				h.Logger.Error("could not match message to event")
 				return nil
@@ -87,9 +82,6 @@ func (h *Handler) New() messages.OutputHandler {
 			if err := enc.Encode(&jsonMsg); err != nil {
 				h.Logger.Error("JSON serialize error:", err)
 			}
-
-		default:
-			h.Logger.Error("unable to serialize message type to JSON")
 		}
 
 		return nil

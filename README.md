@@ -97,6 +97,7 @@ If colors aren't displayed properly, ensure that `TERM` is set correctly in your
 Pretty supports the following extra flags:
 - `-max-name-width` (integer): Maximum length of name. Change if name is truncated (default 50)
 - `-max-value-width` (integer): Maximum length of value. Change if value is truncated (default 50)
+- `-debug` (boolean): Enable debug mode (default `false`)
 
 
 ### Raw (no formatting)
@@ -222,5 +223,3 @@ $ docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out js
 ```
 
 ## TODO
-
-- [ ] support interval aggregation of percentiles

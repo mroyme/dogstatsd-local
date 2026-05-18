@@ -16,6 +16,7 @@ const (
 	SetMetricType
 	TimerMetricType
 	HistogramMetricType
+	DistributionMetricType
 )
 
 func (d DogStatsDMetricType) String() string {
@@ -30,6 +31,8 @@ func (d DogStatsDMetricType) String() string {
 		return "timer"
 	case HistogramMetricType:
 		return "histogram"
+	case DistributionMetricType:
+		return "distribution"
 	}
 	return "unknown"
 }
@@ -209,6 +212,8 @@ func parseDogStatsDMetricMessage(buf []byte) (DogStatsDMessage, error) {
 		metric.MetricType = TimerMetricType
 	case "h":
 		metric.MetricType = HistogramMetricType
+	case "d":
+		metric.MetricType = DistributionMetricType
 	default:
 		return nil, errors.New("invalid message: unknown metric type")
 	}

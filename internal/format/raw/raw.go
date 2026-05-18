@@ -11,9 +11,11 @@ type Handler struct {
 	Logger *log.Logger
 }
 
-func (H *Handler) New() messages.OutputHandler {
-	return func(msg []byte) error {
-		fmt.Println(string(msg))
+func (h *Handler) New() messages.OutputHandler {
+	return func(msg messages.DogStatsDMessage) error {
+		if data := msg.Data(); data != nil {
+			fmt.Println(string(data))
+		}
 		return nil
 	}
 }
