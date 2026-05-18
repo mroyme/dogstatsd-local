@@ -9,6 +9,17 @@ import (
 	"github.com/mroyme/dogstatsd-local/internal/messages"
 )
 
+// joinTrailing joins non-empty styled fields with spaces.
+func joinTrailing(fields ...string) string {
+	var parts []string
+	for _, f := range fields {
+		if f != "" {
+			parts = append(parts, f)
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
 type Handler struct {
 	Logger     *log.Logger
 	Theme      *CatppuccinAdaptiveTheme
@@ -38,9 +49,11 @@ func (h *Handler) New() messages.OutputHandler {
 			}
 			str := h.StyledServiceCheckStatus(sc)
 			str += h.StyledServiceCheckName(sc, h.NameWidth)
-			str += h.StyledServiceCheckHostname(sc)
-			str += h.StyledServiceCheckMessage(sc)
-			str += h.StyledTags(sc.Tags, h.ExtraTags)
+			str += joinTrailing(
+				h.StyledServiceCheckHostname(sc),
+				h.StyledServiceCheckMessage(sc),
+				h.StyledTags(sc.Tags, h.ExtraTags),
+			)
 			fmt.Println(str)
 
 		case messages.EventMessageType:
@@ -50,8 +63,10 @@ func (h *Handler) New() messages.OutputHandler {
 			}
 			str := h.StyledEventAlertType(ev)
 			str += h.StyledEventTitle(ev, h.NameWidth)
-			str += h.StyledEventText(ev)
-			str += h.StyledTags(ev.Tags, h.ExtraTags)
+			str += joinTrailing(
+				h.StyledEventText(ev),
+				h.StyledTags(ev.Tags, h.ExtraTags),
+			)
 			fmt.Println(str)
 		}
 
@@ -145,6 +160,7 @@ func (h *Handler) StyledMetricValue(metric messages.DogStatsDMetric, width int) 
 	return style.Render(value)
 }
 
+// StyledTags renders extra tags + metric tags in a muted italic style with automatic spacing.
 func (h *Handler) StyledTags(tags []string, extraTags []string) string {
 	style := lipgloss.NewStyle().
 		Foreground(h.Theme.Overlay0()).
@@ -183,22 +199,17 @@ func (h *Handler) StyledServiceCheckName(sc messages.DogStatsDServiceCheck, widt
 }
 
 func (h *Handler) StyledServiceCheckHostname(sc messages.DogStatsDServiceCheck) string {
-	style := lipgloss.NewStyle().
-		Width(15).
-		MaxWidth(15).
-		Bold(true).
-		Foreground(h.Theme.Sapphire())
-	return style.Render(sc.Hostname)
+	if sc.Hostname == "" {
+		return ""
+	}
+	return lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Sapphire()).Render(sc.Hostname)
 }
 
 func (h *Handler) StyledServiceCheckMessage(sc messages.DogStatsDServiceCheck) string {
 	if sc.Message == "" {
 		return ""
 	}
-	style := lipgloss.NewStyle().
-		Width(30).
-		Foreground(h.Theme.Subtext1())
-	return style.Render(sc.Message)
+	return lipgloss.NewStyle().Foreground(h.Theme.Subtext1()).Render(sc.Message)
 }
 
 func (h *Handler) StyledEventAlertType(ev messages.DogStatsDEvent) string {
@@ -240,8 +251,5 @@ func (h *Handler) StyledEventText(ev messages.DogStatsDEvent) string {
 	if ev.Text == "" {
 		return ""
 	}
-	style := lipgloss.NewStyle().
-		Width(30).
-		Foreground(h.Theme.Subtext1())
-	return style.Render(ev.Text)
+	return lipgloss.NewStyle().Foreground(h.Theme.Subtext1()).Render(ev.Text)
 }
