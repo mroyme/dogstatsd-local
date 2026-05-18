@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
 )
 
 type Server interface {
@@ -16,7 +15,7 @@ type Server interface {
 	Stop() error
 }
 
-func NewServer(addr string, fn messages.OutputHandler, logger *log.Logger) Server {
+func NewServer(addr string, fn func([]byte) error, logger *log.Logger) Server {
 	return &udpServer{
 		logger:        logger,
 		msgHandler:    fn,
@@ -31,7 +30,7 @@ func NewServer(addr string, fn messages.OutputHandler, logger *log.Logger) Serve
 
 type udpServer struct {
 	logger        *log.Logger
-	msgHandler    messages.OutputHandler
+	msgHandler    func([]byte) error
 	rawAddr       string
 	readDeadline  time.Duration
 	writeDeadline time.Duration

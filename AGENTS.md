@@ -25,11 +25,10 @@ A file for [guiding coding agents](https://agents.md/).
 
 ## DogStatsD Protocol
 
-- Metrics: `name:value|type|@sample_rate|#tags`
+- Metrics: `name:value|type|@sample_rate|#tags` (types: `c` counter, `g` gauge, `s` set, `ms` timer, `h` histogram, `d` distribution)
 - Service checks: `_sc|name|status|#tags|d:timestamp|h:hostname|m:message` (`m:` must be last)
 - Events: `_e{<TITLE_LEN>,<TEXT_LEN>}:<TITLE>|<TEXT>|d:<TS>|h:<HOST>|p:<PRIORITY>|t:<ALERT_TYPE>|k:<AGG_KEY>|s:<SRC_TYPE>|#<TAGS>` (title/text extracted by byte length)
 
 ## TODO
 
-- [ ] Interval aggregation of percentiles
 - [ ] Add meaningful server tests

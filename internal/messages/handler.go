@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type OutputHandler func([]byte) error
+type OutputHandler func(DogStatsDMessage) error
 
 type Handler struct {
 	Logger     *log.Logger
@@ -26,9 +26,14 @@ func (h *Handler) New() *Handler {
 	for i := 0; i < h.PoolSize; i++ {
 		go func() {
 			defer h.wg.Done()
-			for msg := range h.msgCh {
+			for raw := range h.msgCh {
 				if h.Out != nil {
-					err := h.Out(msg)
+					msg, err := ParseDogStatsDMessage(raw)
+					if err != nil {
+						h.Logger.Error(err)
+						continue
+					}
+					err = h.Out(msg)
 					if err != nil {
 						h.Logger.Error(err)
 						return

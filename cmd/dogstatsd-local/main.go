@@ -72,7 +72,6 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	// create a new server and listen on a background goroutine
 	addr := fmt.Sprintf("%s:%d", *host, *port)
 	logger.Infof("listening over UDP at %s", addr)
 	srv := server.NewServer(addr, messageHandler.Handle, logger)

@@ -13,28 +13,20 @@ type Handler struct {
 }
 
 func (h *Handler) New() messages.OutputHandler {
-	return func(msg []byte) error {
-		dMsg, err := messages.ParseDogStatsDMessage(msg)
-		if err != nil {
-			h.Logger.Error(err)
-			return nil
-		}
-
-		switch dMsg.Type() {
+	return func(msg messages.DogStatsDMessage) error {
+		switch msg.Type() {
 		case messages.MetricMessageType:
-			metric, ok := dMsg.(messages.DogStatsDMetric)
+			metric, ok := msg.(messages.DogStatsDMetric)
 			if !ok {
 				return nil
 			}
 
-			tmpl := "metric:%s|%s.%s|%.2f"
-			str := fmt.Sprintf(tmpl, metric.MetricType.String(), metric.Namespace, metric.Name, metric.FloatValue)
+			str := fmt.Sprintf("metric:%s|%s.%s|%.2f", metric.MetricType.String(), metric.Namespace, metric.Name, metric.FloatValue)
 
 			if metric.MetricType == messages.TimerMetricType {
 				str += "ms"
 			}
 
-			// iterate through tags
 			for _, tag := range append(h.ExtraTags, metric.Tags...) {
 				str += " " + tag
 			}
@@ -42,7 +34,7 @@ func (h *Handler) New() messages.OutputHandler {
 			fmt.Println(str)
 
 		case messages.ServiceCheckMessageType:
-			sc, ok := dMsg.(messages.DogStatsDServiceCheck)
+			sc, ok := msg.(messages.DogStatsDServiceCheck)
 			if !ok {
 				return nil
 			}
@@ -62,7 +54,7 @@ func (h *Handler) New() messages.OutputHandler {
 			fmt.Println(str)
 
 		case messages.EventMessageType:
-			ev, ok := dMsg.(messages.DogStatsDEvent)
+			ev, ok := msg.(messages.DogStatsDEvent)
 			if !ok {
 				return nil
 			}
