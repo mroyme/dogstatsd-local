@@ -23,16 +23,32 @@ func (h *Handler) New() messages.OutputHandler {
 			h.Logger.Error(err)
 			return nil
 		}
-		metric, ok := dMsg.(messages.DogStatsDMetric)
-		if dMsg.Type() != messages.MetricMessageType || !ok {
-			return nil
+
+		switch dMsg.Type() {
+		case messages.MetricMessageType:
+			metric, ok := dMsg.(messages.DogStatsDMetric)
+			if !ok {
+				return nil
+			}
+			str := h.StyledMetricType(metric)
+			str += h.StyledMetricName(metric, h.NameWidth)
+			str += h.StyledMetricValue(metric, h.ValueWidth)
+			str += h.StyledTags(metric, h.ExtraTags)
+			fmt.Println(str)
+
+		case messages.ServiceCheckMessageType:
+			sc, ok := dMsg.(messages.DogStatsDServiceCheck)
+			if !ok {
+				return nil
+			}
+			str := h.StyledServiceCheckStatus(sc)
+			str += h.StyledServiceCheckName(sc, h.NameWidth)
+			str += h.StyledServiceCheckHostname(sc)
+			str += h.StyledServiceCheckMessage(sc)
+			str += h.StyledServiceCheckTags(sc, h.ExtraTags)
+			fmt.Println(str)
 		}
 
-		str := h.StyledMetricType(metric)
-		str += h.StyledMetricName(metric, h.NameWidth)
-		str += h.StyledMetricValue(metric, h.ValueWidth)
-		str += h.StyledTags(metric, h.ExtraTags)
-		fmt.Println(str)
 		return nil
 	}
 }
@@ -120,4 +136,61 @@ func (h *Handler) StyledTags(metric messages.DogStatsDMetric, extraTags []string
 		Foreground(h.Theme.Overlay0()).
 		Italic(true)
 	return style.SetString(append(extraTags, metric.Tags...)...).Render()
+}
+
+func (h *Handler) StyledServiceCheckStatus(sc messages.DogStatsDServiceCheck) string {
+	var fg lipgloss.AdaptiveColor
+	switch sc.Status {
+	case messages.ServiceCheckOK:
+		fg = h.Theme.Green()
+	case messages.ServiceCheckWarning:
+		fg = h.Theme.Yellow()
+	case messages.ServiceCheckCritical:
+		fg = h.Theme.Red()
+	default:
+		fg = h.Theme.Overlay1()
+	}
+	style := lipgloss.NewStyle().
+		Width(11).
+		Underline(true).
+		Foreground(fg)
+	return style.Render(sc.Status.String())
+}
+
+func (h *Handler) StyledServiceCheckName(sc messages.DogStatsDServiceCheck, width int) string {
+	if width < 50 {
+		width = 50
+	}
+	text := lipgloss.NewStyle().Bold(true).Foreground(h.Theme.Pink()).Render(sc.Name)
+	return lipgloss.NewStyle().
+		Width(width).
+		MaxWidth(width).
+		Render(text)
+}
+
+func (h *Handler) StyledServiceCheckHostname(sc messages.DogStatsDServiceCheck) string {
+	style := lipgloss.NewStyle().
+		Width(15).
+		MaxWidth(15).
+		Bold(true).
+		Foreground(h.Theme.Sapphire())
+	return style.Render(sc.Hostname)
+}
+
+func (h *Handler) StyledServiceCheckMessage(sc messages.DogStatsDServiceCheck) string {
+	if sc.Message == "" {
+		return ""
+	}
+	style := lipgloss.NewStyle().
+		Width(30).
+		MaxWidth(30).
+		Foreground(h.Theme.Subtext1())
+	return style.Render(sc.Message)
+}
+
+func (h *Handler) StyledServiceCheckTags(sc messages.DogStatsDServiceCheck, extraTags []string) string {
+	style := lipgloss.NewStyle().
+		Foreground(h.Theme.Overlay0()).
+		Italic(true)
+	return style.SetString(append(extraTags, sc.Tags...)...).Render()
 }
