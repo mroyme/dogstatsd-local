@@ -1,4 +1,4 @@
-FROM golang:1.25 AS build_base
+FROM cgr.dev/chainguard/go:latest AS build_base
 
 WORKDIR /tmp/dogstatsd-local
 
