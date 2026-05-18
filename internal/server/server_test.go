@@ -18,7 +18,7 @@ func TestServerReceivesMessages(t *testing.T) {
 		return nil
 	}
 
-	srv := NewServer("127.0.0.1:0", handler, log.Default())
+	srv := NewServer("127.0.0.1:0", handler, nil, log.Default())
 
 	go func() {
 		_ = srv.Listen()
@@ -35,7 +35,7 @@ func TestServerReceivesMessages(t *testing.T) {
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
 
-	srv = NewServer(addr, handler, log.Default())
+	srv = NewServer(addr, handler, nil, log.Default())
 	go func() {
 		_ = srv.Listen()
 	}()
@@ -77,7 +77,7 @@ func TestServerSplitsMultiMessageDatagrams(t *testing.T) {
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
 
-	srv := NewServer(addr, handler, log.Default())
+	srv := NewServer(addr, handler, nil, log.Default())
 	go func() {
 		_ = srv.Listen()
 	}()
@@ -128,7 +128,7 @@ func TestServerStripsCarriageReturns(t *testing.T) {
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
 
-	srv := NewServer(addr, handler, log.Default())
+	srv := NewServer(addr, handler, nil, log.Default())
 	go func() {
 		_ = srv.Listen()
 	}()
@@ -165,7 +165,7 @@ func TestServerStops(t *testing.T) {
 	port := findAvailablePort(t)
 	addr := "127.0.0.1:" + port
 
-	srv := NewServer(addr, func(msg []byte) error { return nil }, log.Default())
+	srv := NewServer(addr, func(msg []byte) error { return nil }, nil, log.Default())
 	go func() {
 		_ = srv.Listen()
 	}()
