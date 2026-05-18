@@ -8,12 +8,12 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  trivy-weekly:
     permissions:
       contents: read
       security-events: write
       actions: read
-    name: Build
+    name: Trivy Weekly Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -34,3 +34,4 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
+          category: trivy-weekly
