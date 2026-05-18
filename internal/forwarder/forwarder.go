@@ -56,15 +56,14 @@ func (f *Forwarder) Start() error {
 
 func (f *Forwarder) Forward(data []byte) {
 	f.mu.Lock()
-	ch := f.ch
-	f.mu.Unlock()
+	defer f.mu.Unlock()
 
-	if ch == nil {
+	if f.ch == nil {
 		return
 	}
 
 	select {
-	case ch <- data:
+	case f.ch <- data:
 	default:
 		if f.Logger != nil {
 			f.Logger.Error("forward buffer full, dropping datagram", "addr", f.Address)

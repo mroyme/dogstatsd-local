@@ -211,7 +211,7 @@ func TestServerForwardsDatagrams(t *testing.T) {
 
 	// Collect forwarded datagrams via channel to avoid data race
 	var messages [][]byte
-	for range int(received.Load()) {
+	for range received.Load() {
 		select {
 		case msg := <-done:
 			messages = append(messages, msg)
