@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*.*.*']
   pull_request:
     branches: [main]
 
@@ -13,6 +14,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
@@ -26,6 +28,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
@@ -36,6 +39,7 @@ jobs:
   security:
     name: Security Scan
     needs: [lint, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -64,7 +68,12 @@ jobs:
   docker:
     name: Docker Publish
     needs: [security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      always() &&
+      needs.security.result != 'failure' &&
+      needs.security.result != 'cancelled' &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -104,15 +113,21 @@ jobs:
             ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=branch
-          annotations: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: &oci-metadata |
             org.opencontainers.image.title="dogstatsd-local"
             org.opencontainers.image.description="A local DogStatsD protocol inspector for debugging metrics, service checks, and events"
             org.opencontainers.image.source="https://github.com/mroyme/dogstatsd-local"
-            org.opencontainers.image.url="https://mroyme.github.io/dogstatsd-local/"
+            org.opencontainers.image.url="https://github.com/mroyme/dogstatsd-local"
             org.opencontainers.image.documentation="https://mroyme.github.io/dogstatsd-local/"
             org.opencontainers.image.licenses="MIT"
             org.opencontainers.image.authors="Madhurjya Roy <m@mroy.me>"
             org.opencontainers.image.vendor="Madhurjya Roy"
+          annotations: *oci-metadata
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - name: Build and push Docker image
         id: build-and-push
