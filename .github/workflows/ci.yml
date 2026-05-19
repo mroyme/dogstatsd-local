@@ -146,6 +146,7 @@ jobs:
 
       - name: Sign the published Docker image
         env:
+          COSIGN_EXPERIMENTAL: "1"
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes --registry-referrers-mode oci-1-1 {}@${DIGEST}
