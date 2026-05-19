@@ -47,43 +47,30 @@ runs:
         RUN_ID: ${{ inputs.run-id }}
         RUN_NUMBER: ${{ inputs.run-number }}
         SHA: ${{ inputs.sha }}
-        TAGS: ${{ inputs.tags }}
-        DIGEST: ${{ inputs.digest }}
       run: |
-        cat > provenance.json <<EOF
+        cat > provenance.json <<'PROVENANCE'
         {
-          "_type": "https://in-toto.io/Statement/v0.1",
-          "predicateType": "https://slsa.dev/provenance/v0.2",
-          "subject": [
-            {
-              "name": "${REPOSITORY}",
+          "builder": {
+            "id": "https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
+          },
+          "buildType": "https://github.com/docker/build-push-action",
+          "invocation": {
+            "configSource": {
+              "uri": "https://github.com/${REPOSITORY}",
               "digest": {
-                "sha256": "${DIGEST#sha256:}"
-              }
-            }
-          ],
-          "predicate": {
-            "builder": {
-              "id": "https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
-            },
-            "buildType": "https://github.com/docker/build-push-action",
-            "invocation": {
-              "configSource": {
-                "uri": "https://github.com/${REPOSITORY}",
-                "digest": {
-                  "sha1": "${SHA}"
-                },
-                "entryPoint": ".github/workflows/ci.yml"
+                "sha1": "${SHA}"
               },
-              "parameters": {},
-              "environment": {
-                "GITHUB_RUN_ID": "${RUN_ID}",
-                "GITHUB_RUN_NUMBER": "${RUN_NUMBER}"
-              }
+              "entryPoint": ".github/workflows/ci.yml"
+            },
+            "parameters": {},
+            "environment": {
+              "GITHUB_RUN_ID": "${RUN_ID}",
+              "GITHUB_RUN_NUMBER": "${RUN_NUMBER}"
             }
           }
         }
-        EOF
+        PROVENANCE
+        sed -i "s|\${REPOSITORY}|${REPOSITORY}|g; s|\${RUN_ID}|${RUN_ID}|g; s|\${RUN_NUMBER}|${RUN_NUMBER}|g; s|\${SHA}|${SHA}|g" provenance.json
 
     - name: Attest provenance
       shell: bash
