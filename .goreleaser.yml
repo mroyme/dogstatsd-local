@@ -67,13 +67,12 @@ signs:
   - id: cosign
     cmd: cosign
     artifacts: checksum
-    output: true
     args:
       - sign-blob
       - --yes
-      - --output-certificate=certificate.pem
-      - --output-signature=signature.sig
       - "${artifact}"
+      - --output-certificate=${certificate}
+      - --output-signature=${signature}
 
 changelog:
   sort: asc
