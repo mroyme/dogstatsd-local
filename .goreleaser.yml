@@ -46,8 +46,8 @@ dockers:
     goarch: arm64
     dockerfile: Dockerfile.goreleaser
     image_templates:
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
     build_flag_templates:
       - --platform=linux/arm64
 
@@ -56,22 +56,22 @@ docker_manifests:
     name_template: docker.io/mroyme/dogstatsd-local:{{ .Version }}
     image_templates:
       - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
   - id: dogstatsd-local-latest
     name_template: docker.io/mroyme/dogstatsd-local:latest
     image_templates:
       - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
   - id: dogstatsd-local-ghcr
     name_template: ghcr.io/mroyme/dogstatsd-local:{{ .Version }}
     image_templates:
       - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
   - id: dogstatsd-local-ghcr-latest
     name_template: ghcr.io/mroyme/dogstatsd-local:latest
     image_templates:
       - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
 
 docker_signs:
   - id: dogstatsd-local
