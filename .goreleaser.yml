@@ -82,6 +82,8 @@ docker_signs:
       - --yes
       - --registry-referrers-mode=oci-1-1
       - "${artifact}"
+    env:
+      - COSIGN_EXPERIMENTAL=1
 
 sboms:
   - id: archive
