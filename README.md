@@ -10,10 +10,6 @@
 > [!TIP]
 > Full documentation available [here](https://mroyme.github.io/dogstatsd-local/)
 
-```
-dogstatsd-local
-```
-
 ![Pretty format output](https://mroyme.github.io/dogstatsd-local/assets/pretty-format.png)
 
 ## Features
