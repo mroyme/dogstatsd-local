@@ -1,17 +1,14 @@
-FROM cgr.dev/chainguard/go:latest AS build_base
+FROM cgr.dev/chainguard/go:latest AS build
 
-WORKDIR /tmp/dogstatsd-local
+WORKDIR /src
 
-COPY go.mod .
-COPY go.sum .
-
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
 RUN CGO_ENABLED=0 go test -v ./...
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o ./out/dogstatsd-local ./cmd/dogstatsd-local/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -tags=netgo -ldflags="-s -w" -o dogstatsd-local ./cmd/dogstatsd-local/main.go
 
 FROM scratch
 
@@ -24,7 +21,7 @@ LABEL org.opencontainers.image.source="https://github.com/mroyme/dogstatsd-local
       org.opencontainers.image.authors="Madhurjya Roy <m@mroy.me>" \
       org.opencontainers.image.vendor="Madhurjya Roy"
 
-COPY --from=build_base /tmp/dogstatsd-local/out/dogstatsd-local /app/dogstatsd-local
+COPY --from=build /src/dogstatsd-local /app/dogstatsd-local
 
 EXPOSE 8125
 

@@ -21,6 +21,13 @@ import (
 	"github.com/mroyme/dogstatsd-local/internal/server"
 )
 
+var (
+	version   = "dev"
+	commit    = "none"
+	date      = "unknown"
+	builtBy   = "unknown"
+)
+
 func main() {
 	host := flag.String("host", "0.0.0.0", "Bind address")
 	port := flag.Int("port", 8125, "Listen port")
@@ -33,7 +40,13 @@ func main() {
 	maxValueWidth := flag.Int("max-value-width", 15,
 		"Maximum length of value. Only used for 'pretty' format, increase if value is truncated")
 	debug := flag.Bool("debug", false, "Enable debug mode")
+	showVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("dogstatsd-local %s (commit=%s date=%s builtBy=%s)\n", version, commit, date, builtBy)
+		os.Exit(0)
+	}
 
 	var extraTags []string
 	if *rawTags != "" {

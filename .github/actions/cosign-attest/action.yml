@@ -1,104 +1,51 @@
-name: "Cosign Sign & Attest"
-description: "Sign and attest a container image with cosign (keyless), provenance, and SBOM"
+name: 'Cosign Sign & Attest'
+description: 'Sign and attest a container image for a single registry'
 
 inputs:
-  tags:
-    description: "Docker image tags (newline-separated)"
+  image:
+    description: 'Full image name (e.g. ghcr.io/mroyme/dogstatsd-local)'
     required: true
   digest:
-    description: "Image digest (sha256:...)"
-    required: true
-  repository:
-    description: "GitHub repository (owner/repo)"
-    required: true
-  run-id:
-    description: "GitHub Actions run ID"
-    required: true
-  run-number:
-    description: "GitHub Actions run number"
-    required: true
-  sha:
-    description: "Git commit SHA"
+    description: 'Image digest (sha256:...)'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install cosign
       uses: sigstore/cosign-installer@v4.1.2
       with:
-        cosign-release: "v2.2.4"
+        cosign-release: 'v2.2.4'
 
     - name: Install syft
-      uses: anchore/sbom-action/download-syft@v0
+      uses: anchore/sbom-action/download-syft@v0.24.0
 
     - name: Sign the published Docker image
       shell: bash
       env:
         COSIGN_EXPERIMENTAL: "1"
-        TAGS: ${{ inputs.tags }}
+        IMAGE: ${{ inputs.image }}
         DIGEST: ${{ inputs.digest }}
-      run: echo "${TAGS}" | xargs -I {} cosign sign --yes --registry-referrers-mode oci-1-1 {}@${DIGEST}
-
-    - name: Generate SLSA provenance
-      shell: bash
-      env:
-        REPOSITORY: ${{ inputs.repository }}
-        RUN_ID: ${{ inputs.run-id }}
-        RUN_NUMBER: ${{ inputs.run-number }}
-        SHA: ${{ inputs.sha }}
-      run: |
-        cat > provenance.json <<'PROVENANCE'
-        {
-          "builder": {
-            "id": "https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
-          },
-          "buildType": "https://github.com/docker/build-push-action",
-          "invocation": {
-            "configSource": {
-              "uri": "https://github.com/${REPOSITORY}",
-              "digest": {
-                "sha1": "${SHA}"
-              },
-              "entryPoint": ".github/workflows/ci.yml"
-            },
-            "parameters": {},
-            "environment": {
-              "GITHUB_RUN_ID": "${RUN_ID}",
-              "GITHUB_RUN_NUMBER": "${RUN_NUMBER}"
-            }
-          }
-        }
-        PROVENANCE
-        sed -i "s|\${REPOSITORY}|${REPOSITORY}|g; s|\${RUN_ID}|${RUN_ID}|g; s|\${RUN_NUMBER}|${RUN_NUMBER}|g; s|\${SHA}|${SHA}|g" provenance.json
-
-    - name: Attest provenance
-      shell: bash
-      env:
-        COSIGN_EXPERIMENTAL: "1"
-        TAGS: ${{ inputs.tags }}
-        DIGEST: ${{ inputs.digest }}
-      run: |
-        echo "${TAGS}" | xargs -I {} cosign attest --yes \
-          --predicate provenance.json \
-          --type slsaprovenance \
-          {}@${DIGEST}
+      run: cosign sign --yes --registry-referrers-mode oci-1-1 "${IMAGE}@${DIGEST}"
 
     - name: Generate SBOM
       shell: bash
       env:
-        REPOSITORY: ${{ inputs.repository }}
+        IMAGE: ${{ inputs.image }}
         DIGEST: ${{ inputs.digest }}
-      run: syft ghcr.io/${REPOSITORY}@${DIGEST} -o spdx-json > sbom.spdx.json
+      run: syft "${IMAGE}@${DIGEST}" -o spdx-json > sbom.spdx.json
+
+    - name: Attest provenance
+      uses: actions/attest@v4
+      with:
+        subject-name: ${{ inputs.image }}
+        subject-digest: ${{ inputs.digest }}
+        push-to-registry: true
 
     - name: Attest SBOM
-      shell: bash
-      env:
-        COSIGN_EXPERIMENTAL: "1"
-        TAGS: ${{ inputs.tags }}
-        DIGEST: ${{ inputs.digest }}
-      run: |
-        echo "${TAGS}" | xargs -I {} cosign attest --yes \
-          --predicate sbom.spdx.json \
-          --type spdxjson \
-          {}@${DIGEST}
+      uses: actions/attest@v4
+      with:
+        subject-name: ${{ inputs.image }}
+        subject-digest: ${{ inputs.digest }}
+        sbom-path: sbom.spdx.json
+        push-to-registry: true
