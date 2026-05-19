@@ -136,6 +136,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          provenance: true
+          sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
@@ -146,4 +148,4 @@ jobs:
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes --registry-referrers-mode oci-1-1 {}@${DIGEST}
