@@ -1,0 +1,126 @@
+version: 2
+
+project_name: dogstatsd-local
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: dogstatsd-local
+    main: ./cmd/dogstatsd-local/main.go
+    binary: dogstatsd-local
+    flags:
+      - -trimpath
+      - -tags=netgo
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+      - -X main.builtBy=goreleaser
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+dockers:
+  - id: dogstatsd-local
+    use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+    build_flag_templates:
+      - --platform=linux/amd64
+  - id: dogstatsd-local-arm64
+    use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+    build_flag_templates:
+      - --platform=linux/arm64
+
+docker_manifests:
+  - id: dogstatsd-local
+    name_template: docker.io/mroyme/dogstatsd-local:{{ .Version }}
+    image_templates:
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+  - id: dogstatsd-local-latest
+    name_template: docker.io/mroyme/dogstatsd-local:latest
+    image_templates:
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+  - id: dogstatsd-local-ghcr
+    name_template: ghcr.io/mroyme/dogstatsd-local:{{ .Version }}
+    image_templates:
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+  - id: dogstatsd-local-ghcr-latest
+    name_template: ghcr.io/mroyme/dogstatsd-local:latest
+    image_templates:
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
+      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64v8
+
+docker_signs:
+  - id: dogstatsd-local
+    artifacts: all
+    cmd: cosign
+    args:
+      - sign
+      - --yes
+      - --registry-referrers-mode=oci-1-1
+      - "${artifact}"
+
+sboms:
+  - id: archive
+    artifacts: archive
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.sbom.spdx.json"
+
+signs:
+  - id: cosign
+    cmd: cosign
+    artifacts: checksum
+    output: true
+    args:
+      - sign-blob
+      - --yes
+      - --output-certificate=certificate.pem
+      - --output-signature=signature.sig
+      - "${artifact}"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^ci:"
+      - "^docs:"
+      - "^mise:"
+      - "^test:"
+      - "^chore:"
+      - "^build:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: mroyme
+    name: dogstatsd-local
+  footer: |
+
+    ---
+
+    **Full Changelog**: https://github.com/mroyme/dogstatsd-local/compare/{{ .PreviousTag }}...{{ .Tag }}
