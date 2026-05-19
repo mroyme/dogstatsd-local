@@ -9,7 +9,8 @@ LABEL org.opencontainers.image.source="https://github.com/mroyme/dogstatsd-local
       org.opencontainers.image.authors="Madhurjya Roy <m@mroy.me>" \
       org.opencontainers.image.vendor="Madhurjya Roy"
 
-COPY dogstatsd-local /app/dogstatsd-local
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/dogstatsd-local /app/dogstatsd-local
 
 EXPOSE 8125
 

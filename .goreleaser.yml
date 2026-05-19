@@ -29,54 +29,26 @@ builds:
       - amd64
       - arm64
 
-dockers:
-  - id: dogstatsd-local
-    use: buildx
-    goos: linux
-    goarch: amd64
+dockers_v2:
+  - images:
+      - docker.io/mroyme/dogstatsd-local
+      - ghcr.io/mroyme/dogstatsd-local
     dockerfile: Dockerfile.goreleaser
-    image_templates:
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-    build_flag_templates:
-      - --platform=linux/amd64
-  - id: dogstatsd-local-arm64
-    use: buildx
-    goos: linux
-    goarch: arm64
-    dockerfile: Dockerfile.goreleaser
-    image_templates:
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
-    build_flag_templates:
-      - --platform=linux/arm64
-
-docker_manifests:
-  - id: dogstatsd-local
-    name_template: docker.io/mroyme/dogstatsd-local:{{ .Version }}
-    image_templates:
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
-  - id: dogstatsd-local-latest
-    name_template: docker.io/mroyme/dogstatsd-local:latest
-    image_templates:
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - docker.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
-  - id: dogstatsd-local-ghcr
-    name_template: ghcr.io/mroyme/dogstatsd-local:{{ .Version }}
-    image_templates:
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
-  - id: dogstatsd-local-ghcr-latest
-    name_template: ghcr.io/mroyme/dogstatsd-local:latest
-    image_templates:
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-amd64
-      - ghcr.io/mroyme/dogstatsd-local:{{ .Version }}-arm64
+    tags:
+      - "v{{ .Version }}"
+      - "{{ if not .IsNightly }}latest{{ end }}"
+    labels:
+      org.opencontainers.image.title: dogstatsd-local
+      org.opencontainers.image.description: A local DogStatsD protocol inspector for debugging metrics, service checks, and events
+      org.opencontainers.image.source: https://github.com/mroyme/dogstatsd-local
+      org.opencontainers.image.url: https://github.com/mroyme/dogstatsd-local
+      org.opencontainers.image.documentation: https://mroyme.github.io/dogstatsd-local/
+      org.opencontainers.image.licenses: MIT
+      org.opencontainers.image.authors: Madhurjya Roy <m@mroy.me>
+      org.opencontainers.image.vendor: Madhurjya Roy
 
 docker_signs:
-  - id: dogstatsd-local
-    artifacts: all
-    cmd: cosign
+  - cmd: cosign
     args:
       - sign
       - --yes
