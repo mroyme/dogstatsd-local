@@ -37,7 +37,7 @@ dockers_v2:
     tags:
       - "v{{ .Version }}"
       - "{{ if not .IsNightly }}latest{{ end }}"
-    labels:
+    labels: &oci-metadata
       org.opencontainers.image.title: dogstatsd-local
       org.opencontainers.image.description: A local DogStatsD protocol inspector for debugging metrics, service checks, and events
       org.opencontainers.image.source: https://github.com/mroyme/dogstatsd-local
@@ -46,6 +46,7 @@ dockers_v2:
       org.opencontainers.image.licenses: MIT
       org.opencontainers.image.authors: Madhurjya Roy <m@mroy.me>
       org.opencontainers.image.vendor: Madhurjya Roy
+    annotations: *oci-metadata
 
 docker_signs:
   - cmd: cosign
