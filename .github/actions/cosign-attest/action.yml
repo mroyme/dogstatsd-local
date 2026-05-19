@@ -8,6 +8,9 @@ inputs:
   digest:
     description: 'Image digest (sha256:...)'
     required: true
+  github-token:
+    description: 'GitHub token for attestation push'
+    required: true
 
 runs:
   using: 'composite'
@@ -41,6 +44,7 @@ runs:
         subject-name: ${{ inputs.image }}
         subject-digest: ${{ inputs.digest }}
         push-to-registry: true
+        github-token: ${{ inputs.github-token }}
 
     - name: Attest SBOM
       uses: actions/attest@v4
@@ -49,3 +53,4 @@ runs:
         subject-digest: ${{ inputs.digest }}
         sbom-path: sbom.spdx.json
         push-to-registry: true
+        github-token: ${{ inputs.github-token }}

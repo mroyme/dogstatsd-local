@@ -181,3 +181,4 @@ jobs:
         with:
           image: ${{ matrix.registry }}/${{ github.repository }}
           digest: ${{ needs.docker.outputs.digest }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
