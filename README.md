@@ -42,14 +42,25 @@ Download from the [releases page](https://github.com/mroyme/dogstatsd-local/rele
 ```bash
 # Start listening on port 8125 (default)
 dogstatsd-local
+```
 
-# Send a metric
+Point your service at dogstatsd-local by setting the standard Datadog environment variables:
+
+```bash
+export DD_AGENT_HOST=127.0.0.1
+export DD_DOGSTATSD_PORT=8125
+```
+
+Or test manually with netcat:
+
+```bash
+# Metric
 printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
 
-# Send a service check
+# Service check
 printf "_sc|Redis connection|2|#env:dev|m:Timeout" | nc -u -w1 localhost 8125
 
-# Send an event
+# Event
 printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file" | nc -u -w1 localhost 8125
 ```
 
@@ -129,6 +140,7 @@ Full documentation is available at [mroyme.github.io/dogstatsd-local](https://mr
 
 - [Installation](https://mroyme.github.io/dogstatsd-local/installation/)
 - [Configuration](https://mroyme.github.io/dogstatsd-local/configuration/)
+- [Connecting Your Service](https://mroyme.github.io/dogstatsd-local/connecting/)
 - [Output Formats](https://mroyme.github.io/dogstatsd-local/output-formats/)
 - [Forwarding](https://mroyme.github.io/dogstatsd-local/forwarding/)
 - [Protocol Reference](https://mroyme.github.io/dogstatsd-local/protocol/)
