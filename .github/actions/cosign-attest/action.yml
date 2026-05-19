@@ -92,7 +92,7 @@ runs:
         TAGS: ${{ inputs.tags }}
         DIGEST: ${{ inputs.digest }}
       run: |
-        echo "${TAGS}" | xargs -I {} cosign attest --yes --registry-referrers-mode oci-1-1 \
+        echo "${TAGS}" | xargs -I {} cosign attest --yes \
           --predicate provenance.json \
           --type slsaprovenance \
           {}@${DIGEST}
@@ -111,7 +111,7 @@ runs:
         TAGS: ${{ inputs.tags }}
         DIGEST: ${{ inputs.digest }}
       run: |
-        echo "${TAGS}" | xargs -I {} cosign attest --yes --registry-referrers-mode oci-1-1 \
+        echo "${TAGS}" | xargs -I {} cosign attest --yes \
           --predicate sbom.spdx.json \
           --type spdxjson \
           {}@${DIGEST}
