@@ -58,11 +58,19 @@ docker_signs:
     env:
       - COSIGN_EXPERIMENTAL=1
 
-brews:
-  - repository:
+homebrew_casks:
+  - name: dogstatsd-local
+    binary: dogstatsd-local
+    repository:
       name: mroyme/homebrew-tap
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/dogstatsd-local"]
+          end
 
 sboms:
   - id: archive
