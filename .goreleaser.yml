@@ -62,7 +62,8 @@ homebrew_casks:
   - name: dogstatsd-local
     binary: dogstatsd-local
     repository:
-      name: mroyme/homebrew-tap
+      owner: mroyme
+      name: homebrew-tap
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     hooks:
