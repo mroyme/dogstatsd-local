@@ -60,7 +60,7 @@ docker_signs:
 
 homebrew_casks:
   - name: dogstatsd-local
-    binary: dogstatsd-local
+    binaries: [dogstatsd-local]
     repository:
       owner: mroyme
       name: homebrew-tap
