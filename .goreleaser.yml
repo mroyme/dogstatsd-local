@@ -63,6 +63,8 @@ homebrew_casks:
     binaries: [dogstatsd-local]
     description: A local DogStatsD protocol inspector for debugging metrics, service checks, and events
     homepage: https://mroyme.github.io/dogstatsd-local/
+    url:
+      verified: "github.com/mroyme/dogstatsd-local/"
     repository:
       owner: mroyme
       name: homebrew-tap
