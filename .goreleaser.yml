@@ -61,7 +61,7 @@ docker_signs:
 homebrew_casks:
   - name: dogstatsd-local
     binaries: [dogstatsd-local]
-    description: Local DogStatsD protocol inspector for debugging metrics, service checks, and events
+    description: Local DogStatsD protocol inspector for debugging metrics and events
     homepage: https://github.com/mroyme/dogstatsd-local
     repository:
       owner: mroyme
