@@ -68,6 +68,12 @@ homebrew_casks:
       name: homebrew-tap
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      pull_request:
+        enabled: true
+        base:
+          owner: mroyme
+          name: homebrew-tap
+          branch: main
     hooks:
       post:
         install: |-
