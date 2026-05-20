@@ -62,6 +62,7 @@ brews:
   - repository:
       name: mroyme/homebrew-tap
       branch: main
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
 
 sboms:
   - id: archive
