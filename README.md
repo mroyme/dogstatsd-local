@@ -10,8 +10,6 @@
 > [!TIP]
 > Full documentation available [here](https://mroyme.github.io/dogstatsd-local/)
 
-![Pretty format output](https://mroyme.github.io/dogstatsd-local/assets/pretty-format.png)
-
 ## Features
 
 - **All DogStatsD message types** — metrics (count, gauge, set, timer, histogram, distribution), service checks, events
@@ -19,32 +17,23 @@
 - **Metric forwarding** — proxy datagrams to an upstream DogStatsD server while inspecting locally
 - **Catppuccin colors** — pretty format adapts to your terminal's light/dark theme
 
-## Installation
+## Quick Start
 
-### Go
+Install with Go:
 
 ```bash
 go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
 ```
 
-### Docker
+Or run with Docker:
 
 ```bash
 docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 ```
 
-### Prebuilt Binaries
+Or download a [prebuilt binary](https://github.com/mroyme/dogstatsd-local/releases/latest) for Linux, macOS, or Windows (x86-64 and ARM64).
 
-Download from the [releases page](https://github.com/mroyme/dogstatsd-local/releases/latest) for Linux, macOS, and Windows (x86-64 and ARM64).
-
-## Quick Start
-
-```bash
-# Start listening on port 8125 (default)
-dogstatsd-local
-```
-
-Point your service at dogstatsd-local by setting the standard Datadog environment variables:
+Then start it up and point your service at it:
 
 ```bash
 export DD_AGENT_HOST=127.0.0.1
@@ -79,15 +68,9 @@ printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_typ
 
 ## Output Formats
 
-### Pretty
+### Pretty (default)
 
-Colorized, human-readable with Catppuccin-themed colors:
-
-```
-COUNT      page | views                                      1.00           env:dev
-CRIT       Redis connection                                  Timeout env:dev
-WARN       An exception occurred                             Cannot parse CSV file err_type:bad_file
-```
+![Pretty format output](https://mroyme.github.io/dogstatsd-local/assets/pretty-format.png)
 
 ### JSON
 

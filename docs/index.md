@@ -1,6 +1,6 @@
 # dogstatsd-local
 
-A local DogStatsD protocol inspector. Listen on a UDP socket, parse metrics, service checks, and events, and print them to stdout in your choice of format.
+A local DogStatsD protocol inspector for debugging metrics, service checks, and events.
 
 ## Why?
 
@@ -8,17 +8,70 @@ Datadog is great for production metric aggregation. **dogstatsd-local** lets you
 
 ## Quick Start
 
+Install with Go:
+
 ```bash
 go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
-dogstatsd-local
 ```
+
+Or run with Docker:
 
 ```bash
-printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
+docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local
 ```
 
+Or download a [prebuilt binary](https://github.com/mroyme/dogstatsd-local/releases/latest) for Linux, macOS, or Windows (x86-64 and ARM64).
+
+Then start it up and point your service at it:
+
+```bash
+export DD_AGENT_HOST=127.0.0.1
+export DD_DOGSTATSD_PORT=8125
 ```
-COUNT      page | views                                      1.00           env:dev
+
+Or test manually with netcat:
+
+```bash
+# Metric
+printf "page.views:1|c|#env:dev" | nc -u -w1 localhost 8125
+
+# Service check
+printf "_sc|Redis connection|2|#env:dev|m:Timeout" | nc -u -w1 localhost 8125
+
+# Event
+printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_type:bad_file" | nc -u -w1 localhost 8125
+```
+
+## Output Formats
+
+### Pretty (default)
+
+![Pretty format output](assets/pretty-format.png)
+
+### JSON
+
+Machine-readable, one JSON object per line:
+
+```json
+{"namespace":"page","name":"views","path":"page.views","value":1,"sample_rate":1,"tags":["env:dev"]}
+```
+
+### Short
+
+Compact human-readable:
+
+```
+metric:count|page.views|1.00 env:dev
+service_check:Redis connection|CRIT|msg:Timeout env:dev
+event:title|text|priority:normal|alert:info
+```
+
+### Raw
+
+Passthrough of the original datagram:
+
+```
+page.views:1|c|#env:dev
 ```
 
 ## Features
