@@ -1,5 +1,11 @@
 # Installation
 
+## Homebrew
+
+```bash
+brew install mroyme/tap/dogstatsd-local
+```
+
 ## Go
 
 ```bash

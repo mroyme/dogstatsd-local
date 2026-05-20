@@ -8,7 +8,13 @@ Datadog is great for production metric aggregation. **dogstatsd-local** lets you
 
 ## Quick Start
 
-Install with Go:
+Install with Homebrew:
+
+```bash
+brew install mroyme/tap/dogstatsd-local
+```
+
+Or with Go:
 
 ```bash
 go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
