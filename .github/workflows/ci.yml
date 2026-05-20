@@ -35,52 +35,14 @@ jobs:
           go-version: stable
       - run: go test -v ./...
 
-  security:
-    name: Security Scan
+  docker:
+    name: Docker Build & Scan
     needs: [lint, test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
       actions: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/mroyme/dogstatsd-local:${{ github.sha }} .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: "docker.io/mroyme/dogstatsd-local:${{ github.sha }}"
-          format: "sarif"
-          output: "trivy-results.sarif"
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: "trivy-results.sarif"
-
-  docker:
-    name: Docker Publish
-    needs: [security]
-    if: >-
-      always() &&
-      needs.security.result != 'failure' &&
-      needs.security.result != 'cancelled' &&
-      github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    outputs:
-      digest: ${{ steps.build-and-push.outputs.digest }}
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -88,97 +50,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Log into Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log into GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: |
-            docker.io/${{ github.repository }}
-            ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=branch
-          labels: &oci-metadata |
-            org.opencontainers.image.title=dogstatsd-local
-            org.opencontainers.image.description=A local DogStatsD protocol inspector for debugging metrics, service checks, and events
-            org.opencontainers.image.source=https://github.com/mroyme/dogstatsd-local
-            org.opencontainers.image.url=https://github.com/mroyme/dogstatsd-local
-            org.opencontainers.image.documentation=https://mroyme.github.io/dogstatsd-local/
-            org.opencontainers.image.licenses=MIT
-            org.opencontainers.image.authors=Madhurjya Roy <m@mroy.me>
-            org.opencontainers.image.vendor=Madhurjya Roy
-          annotations: *oci-metadata
-        env:
-          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
-
-      - name: Build and push Docker image
-        id: build-and-push
+      - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: true
-          provenance: true
-          sbom: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          push: false
+          load: true
+          tags: dogstatsd-local:scan
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  sign:
-    name: Sign & Attest (${{ matrix.registry }})
-    needs: [docker]
-    if: >-
-      always() &&
-      needs.docker.result != 'failure' &&
-      needs.docker.result != 'cancelled'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        registry:
-          - docker.io
-          - ghcr.io
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-      artifact-metadata: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Log into Docker Hub
-        if: matrix.registry == 'docker.io'
-        uses: docker/login-action@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-ref: "dogstatsd-local:scan"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
 
-      - name: Log into GitHub Container Registry
-        if: matrix.registry == 'ghcr.io'
-        uses: docker/login-action@v4
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Sign and attest Docker image
-        uses: ./.github/actions/cosign-attest
-        with:
-          image: ${{ matrix.registry }}/${{ github.repository }}
-          digest: ${{ needs.docker.outputs.digest }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sarif_file: "trivy-results.sarif"
