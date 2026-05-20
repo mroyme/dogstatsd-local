@@ -3,24 +3,25 @@ site_description: A local DogStatsD protocol inspector for debugging metrics, se
 site_url: https://mroyme.github.io/dogstatsd-local/
 repo_name: mroyme/dogstatsd-local
 repo_url: https://github.com/mroyme/dogstatsd-local
+copyright: Copyright &copy; 2026 Madhurjya Roy
 
 theme:
   name: material
   palette:
     - media: "(prefers-color-scheme)"
-      primary: custom
+      primary: deep purple
       toggle:
         icon: material/brightness-auto
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: custom
+      primary: deep purple
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: custom
+      primary: deep purple
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
@@ -29,8 +30,8 @@ theme:
     - navigation.top
     - content.code.copy
 
-extra_css:
-  - stylesheets/extra.css
+extra:
+  generator: false
 
 nav:
   - Home: index.md
