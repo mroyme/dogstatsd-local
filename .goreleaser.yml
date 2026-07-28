@@ -61,18 +61,25 @@ docker_signs:
 homebrew_casks:
   - name: dogstatsd-local
     binaries: [dogstatsd-local]
+    description: Local DogStatsD protocol inspector for debugging metrics and events
+    homepage: https://github.com/mroyme/dogstatsd-local
     repository:
       owner: mroyme
       name: homebrew-tap
-      branch: main
+      branch: dogstatsd-local-{{ .Version }}
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      pull_request:
+        enabled: true
+        base:
+          owner: mroyme
+          name: homebrew-tap
+          branch: main
     hooks:
       post:
-        install: |
+        install: |-
           if OS.mac?
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/dogstatsd-local"]
           end
-
 sboms:
   - id: archive
     artifacts: archive
