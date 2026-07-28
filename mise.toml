@@ -34,15 +34,11 @@ depends = ["fmt", "fix", "vet", "lint", "test"]
 
 [tasks.docs]
 description = "Build documentation site"
-run = "git lfs pull && uv run mkdocs build"
+run = "git lfs pull && uv run zensical build --clean"
 
 [tasks.docs-serve]
 description = "Serve documentation site locally"
-run = "git lfs pull && uv run mkdocs serve"
-
-[tasks.docs-deploy]
-description = "Deploy documentation to GitHub Pages"
-run = "git lfs pull && uv run mkdocs gh-deploy --force"
+run = "git lfs pull && uv run zensical serve"
 
 [tasks.clean]
 description = "Remove build artifacts"
