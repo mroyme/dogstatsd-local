@@ -2,7 +2,7 @@ module github.com/mroyme/dogstatsd-local
 
 go 1.26.0
 
-toolchain go1.26.4
+toolchain go1.26.5
 
 require (
 	github.com/catppuccin/go v0.3.0
