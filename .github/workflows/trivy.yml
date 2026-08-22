@@ -17,14 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build an image from Dockerfile
         run: |
           docker build -t docker.io/mroyme/dogstatsd-local:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@v0
         with:
           image-ref: "docker.io/mroyme/dogstatsd-local:${{ github.sha }}"
           format: "sarif"
