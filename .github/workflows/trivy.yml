@@ -24,7 +24,7 @@ jobs:
           docker build -t docker.io/mroyme/dogstatsd-local:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "docker.io/mroyme/dogstatsd-local:${{ github.sha }}"
           format: "sarif"
