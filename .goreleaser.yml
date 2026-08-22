@@ -6,20 +6,9 @@ before:
   hooks:
     - go mod tidy
 
+# https://goreleaser.com/customization/build
 builds:
-  - id: dogstatsd-local
-    main: ./cmd/dogstatsd-local/main.go
-    binary: dogstatsd-local
-    flags:
-      - -trimpath
-      - -tags=netgo
-    ldflags:
-      - -s -w
-      - -X main.version={{ .Version }}
-      - -X main.commit={{ .Commit }}
-      - -X main.date={{ .Date }}
-      - -X main.builtBy=goreleaser
-    env:
+  - env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -28,36 +17,99 @@ builds:
     goarch:
       - amd64
       - arm64
+    # ensures mod timestamp to be the commit timestamp
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+      - -tags=netgo
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .CommitDate }} # use commit date instead of current date as main.date
+    id: dogstatsd-local
+    main: ./cmd/dogstatsd-local/main.go
+    binary: dogstatsd-local
 
+# https://goreleaser.com/customization/source/
+source:
+  enabled: true
+  name_template: "{{ .ProjectName }}.src"
+
+# https://goreleaser.com/customization/package/archives/
+archives:
+  - formats: 
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    wrap_in_directory: true
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    builds_info:
+      mtime: "{{ .CommitTimestamp }}"
+
+# https://goreleaser.com/customization/sbom
+sboms:
+  - artifacts: archive
+  - id: source # Two different sbom configurations need two different IDs
+    artifacts: source
+
+# https://goreleaser.com/customization/checksum
+checksum:
+  name_template: "checksums.txt"
+
+# https://goreleaser.com/customization/sign
+signs:
+- cmd: cosign
+  signature: "${artifact}.sigstore.json"
+  args:
+    - sign-blob
+    - "--bundle=${signature}"
+    - "${artifact}"
+    - "--yes"
+  artifacts: checksum
+  output: true
+
+# https://goreleaser.com/customization/dockers_v2
 dockers_v2:
   - images:
       - docker.io/mroyme/dogstatsd-local
       - ghcr.io/mroyme/dogstatsd-local
-    dockerfile: Dockerfile.goreleaser
     tags:
       - "v{{ .Version }}"
       - "{{ if not .IsNightly }}latest{{ end }}"
-    labels: &oci-metadata
-      org.opencontainers.image.title: dogstatsd-local
-      org.opencontainers.image.description: A local DogStatsD protocol inspector for debugging metrics, service checks, and events
-      org.opencontainers.image.source: https://github.com/mroyme/dogstatsd-local
+    dockerfile: Dockerfile.goreleaser
+    annotations: &image-spec
+      # https://specs.opencontainers.org/image-spec/annotations
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.authors: Madhurjya Roy <m@mroy.me>
       org.opencontainers.image.url: https://github.com/mroyme/dogstatsd-local
       org.opencontainers.image.documentation: https://mroyme.github.io/dogstatsd-local/
-      org.opencontainers.image.licenses: MIT
-      org.opencontainers.image.authors: Madhurjya Roy <m@mroy.me>
+      org.opencontainers.image.source: "{{.GitURL}}"
+      org.opencontainers.image.version: "{{.Version}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
       org.opencontainers.image.vendor: Madhurjya Roy
-    annotations: *oci-metadata
+      org.opencontainers.image.licenses: MIT
+      # The following is not applicable for this project
+      # org.opencontainers.image.ref.name: REF_NAME
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.description: A local DogStatsD protocol inspector for debugging metrics, service checks, and events
+      # The following annotations don't make sense when image is "FROM scratch"
+      # org.opencontainers.image.base.digest: BASE_DIGEST
+      # org.opencontainers.image.base.name: BASE_NAME
+    labels: *image-spec
 
+# https://goreleaser.com/customization/docker_sign
 docker_signs:
   - cmd: cosign
+    output: true
     args:
-      - sign
-      - --yes
-      - --registry-referrers-mode=oci-1-1
+      - "sign"
       - "${artifact}"
-    env:
-      - COSIGN_EXPERIMENTAL=1
+      - "--yes"
 
+# https://goreleaser.com/customization/publish/homebrew_casks
 homebrew_casks:
   - name: dogstatsd-local
     binaries: [dogstatsd-local]
@@ -80,87 +132,13 @@ homebrew_casks:
           if OS.mac?
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/dogstatsd-local"]
           end
-sboms:
-  - id: archive
-    artifacts: archive
-    documents:
-      - "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.sbom.spdx.json"
 
-signs:
-  - id: cosign
-    cmd: cosign
-    artifacts: checksum
-    args:
-      - sign-blob
-      - --yes
-      - "${artifact}"
-      - --output-certificate=${certificate}
-      - --output-signature=${signature}
-
+# https://goreleaser.com/customization/publish/changelog
 changelog:
-  sort: asc
-  use: github
-  groups:
-    - title: "⚠ BREAKING CHANGES"
-      regexp: '^.*?[[:alpha:]][[:alnum:]-]*(\([^)]+\))?!: .+$'
-      order: 0
-    - title: Features
-      regexp: '^.*?feat(\([^)]+\))?!?: .+$'
-      order: 1
-    - title: Bug Fixes
-      regexp: '^.*?fix(\([^)]+\))?!?: .+$'
-      order: 2
-    - title: Performance Improvements
-      regexp: '^.*?perf(\([^)]+\))?!?: .+$'
-      order: 3
-    - title: Reverts
-      regexp: '^.*?revert: .+$'
-      order: 4
-    - title: Documentation
-      regexp: '^.*?docs(\([^)]+\))?!?: .+$'
-      order: 5
-    - title: Styles
-      regexp: '^.*?style(\([^)]+\))?!?: .+$'
-      order: 6
-    - title: Chores
-      regexp: '^.*?chore(\([^)]+\))?!?: .+$'
-      order: 7
-    - title: Code Refactoring
-      regexp: '^.*?refactor(\([^)]+\))?!?: .+$'
-      order: 8
-    - title: Tests
-      regexp: '^.*?test(\([^)]+\))?!?: .+$'
-      order: 9
-    - title: Build System
-      regexp: '^.*?build(\([^)]+\))?!?: .+$'
-      order: 10
-    - title: Continuous Integration
-      regexp: '^.*?ci(\([^)]+\))?!?: .+$'
-      order: 11
-  filters:
-    include:
-      - "^[[:alpha:]][[:alnum:]-]*(\\([^)]+\\))?!: .+$"
-      - "^feat(\\([^)]+\\))?!?: .+$"
-      - "^fix(\\([^)]+\\))?!?: .+$"
-      - "^perf(\\([^)]+\\))?!?: .+$"
-      - "^revert: .+$"
-      - "^docs(\\([^)]+\\))?!?: .+$"
-      - "^style(\\([^)]+\\))?!?: .+$"
-      - "^chore(\\([^)]+\\))?!?: .+$"
-      - "^refactor(\\([^)]+\\))?!?: .+$"
-      - "^test(\\([^)]+\\))?!?: .+$"
-      - "^build(\\([^)]+\\))?!?: .+$"
-      - "^ci(\\([^)]+\\))?!?: .+$"
-    exclude:
-      - Merge pull request
-      - Merge branch
+  use: github-native
 
+# https://goreleaser.com/customization/publish/scm
 release:
   github:
     owner: mroyme
     name: dogstatsd-local
-  footer: |
-
-    ---
-
-    **Full Changelog**: https://github.com/mroyme/dogstatsd-local/compare/{{ .PreviousTag }}...{{ .Tag }}
