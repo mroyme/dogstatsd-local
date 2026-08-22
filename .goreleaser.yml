@@ -106,7 +106,7 @@ docker_signs:
     output: true
     args:
       - "sign"
-      - "${artifact}"
+      - "${artifact}@${digest}"
       - "--yes"
 
 # https://goreleaser.com/customization/publish/homebrew_casks
