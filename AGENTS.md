@@ -19,7 +19,7 @@ A file for [guiding coding agents](https://agents.md/).
 
 ## Code Conventions
 
-- Go 1.26+, standard `testing` package only
+- Go 1.27+, standard `testing` package only
 - Parse errors in format handlers are logged but return `nil` (never kill the pool worker)
 - `m:` field in service checks must be extracted before splitting on `|` (its value can contain pipes)
 
