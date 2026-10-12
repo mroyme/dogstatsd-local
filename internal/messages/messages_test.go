@@ -541,6 +541,12 @@ func TestDogStatsDMessageData(t *testing.T) {
 		name  string
 		input string
 	}{
+		{"counter", "page.views:1|c|@0.5|#env:dev,team:platform"},
+		{"gauge", "queue.size:-2.50|g"},
+		{"set", "users.unique:42|s|#env:dev"},
+		{"timer", "request.duration:123.45|ms"},
+		{"histogram", "request.size:1024|h"},
+		{"distribution", "request.latency:12.5|d"},
 		{"service check", "_sc|my_service|0|#env:prod"},
 		{"event", "_e{5,4}:title|text"},
 	}
