@@ -24,7 +24,7 @@ jobs:
           go-version: stable
 
       - name: Install syft
-        uses: anchore/sbom-action/download-syft@v0
+        uses: anchore/sbom-action/download-syft@v0.24.3
 
       - name: Install cosign
         uses: sigstore/cosign-installer@v4.1.2
