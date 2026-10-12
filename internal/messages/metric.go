@@ -31,6 +31,7 @@ func (d DogStatsDMetric) Type() DogStatsDMessageType {
 
 func parseDogStatsDMetricMessage(buf []byte) (DogStatsDMessage, error) {
 	metric := DogStatsDMetric{
+		MetricData: buf,
 		Timestamp:  time.Now(),
 		Tags:       make([]string, 0),
 		SampleRate: 1.0,
