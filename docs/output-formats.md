@@ -51,14 +51,6 @@ WARN       An exception occurred                             Cannot parse CSV fi
 
 Alert type is color-coded: blue for INFO, yellow for WARN, red for ERR, green for OK.
 
-### Extra Tags
-
-Use `-tags` to append tags to every message:
-
-```bash
-dogstatsd-local -tags env:dev,team:platform
-```
-
 ### Column Widths
 
 Use `-max-name-width` and `-max-value-width` to adjust column sizes:

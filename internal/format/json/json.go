@@ -10,8 +10,7 @@ import (
 )
 
 type Handler struct {
-	Logger    *log.Logger
-	ExtraTags []string
+	Logger *log.Logger
 }
 
 func (h *Handler) New() messages.OutputHandler {
@@ -33,7 +32,7 @@ func (h *Handler) New() messages.OutputHandler {
 				Value:      metric.FloatValue,
 				Extras:     metric.Extras,
 				SampleRate: metric.SampleRate,
-				Tags:       append(h.ExtraTags, metric.Tags...),
+				Tags:       metric.Tags,
 			}
 
 			if err := enc.Encode(&jsonMsg); err != nil {
@@ -52,7 +51,7 @@ func (h *Handler) New() messages.OutputHandler {
 				Status:    sc.Status.String(),
 				Message:   sc.Message,
 				Hostname:  sc.Hostname,
-				Tags:      append(h.ExtraTags, sc.Tags...),
+				Tags:      sc.Tags,
 				Timestamp: sc.Timestamp.Unix(),
 			}
 
@@ -75,7 +74,7 @@ func (h *Handler) New() messages.OutputHandler {
 				AggregationKey: ev.AggregationKey,
 				SourceType:     ev.SourceType,
 				Hostname:       ev.Hostname,
-				Tags:           append(h.ExtraTags, ev.Tags...),
+				Tags:           ev.Tags,
 				Timestamp:      ev.Timestamp.Unix(),
 			}
 

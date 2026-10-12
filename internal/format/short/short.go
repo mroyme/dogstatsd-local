@@ -9,8 +9,7 @@ import (
 )
 
 type Handler struct {
-	Logger    *log.Logger
-	ExtraTags []string
+	Logger *log.Logger
 }
 
 func (h *Handler) New() messages.OutputHandler {
@@ -28,10 +27,9 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "ms"
 			}
 
-			tags := append(h.ExtraTags, metric.Tags...)
-			if len(tags) > 0 {
+			if len(metric.Tags) > 0 {
 				var b strings.Builder
-				for _, tag := range tags {
+				for _, tag := range metric.Tags {
 					b.WriteByte(' ')
 					b.WriteString(tag)
 				}
@@ -54,10 +52,9 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "|host:" + sc.Hostname
 			}
 
-			tags := append(h.ExtraTags, sc.Tags...)
-			if len(tags) > 0 {
+			if len(sc.Tags) > 0 {
 				var b strings.Builder
-				for _, tag := range tags {
+				for _, tag := range sc.Tags {
 					b.WriteByte(' ')
 					b.WriteString(tag)
 				}
@@ -86,10 +83,9 @@ func (h *Handler) New() messages.OutputHandler {
 				str += "|host:" + ev.Hostname
 			}
 
-			tags := append(h.ExtraTags, ev.Tags...)
-			if len(tags) > 0 {
+			if len(ev.Tags) > 0 {
 				var b strings.Builder
-				for _, tag := range tags {
+				for _, tag := range ev.Tags {
 					b.WriteByte(' ')
 					b.WriteString(tag)
 				}

@@ -67,7 +67,6 @@ printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_typ
 | `-port`            | `8125`       | UDP listen port                                   |
 | `-out`             | `pretty`     | Output format: `pretty`, `json`, `short`, `raw`   |
 | `-forward`         | _(disabled)_ | Forward datagrams to an upstream DogStatsD server |
-| `-tags`            | _(empty)_    | Extra tags to append, comma-delimited             |
 | `-max-name-width`  | `50`         | Max name length for pretty format                 |
 | `-max-value-width` | `15`         | Max value length for pretty format                |
 | `-debug`           | `false`      | Enable debug logging                              |

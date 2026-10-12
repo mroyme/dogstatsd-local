@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -33,7 +32,6 @@ func main() {
 	port := flag.Int("port", 8125, "Listen port")
 	out := flag.String("out", "pretty", "Output format: json|pretty|raw|short")
 	forward := flag.String("forward", "", "Forward raw datagrams to an upstream DogStatsD server (e.g. 127.0.0.1:8126)")
-	rawTags := flag.String("tags", "", "Extra tags, comma delimited")
 	maxNameWidth := flag.Int("max-name-width", 50,
 		"Maximum length of name. Only used for 'pretty' format, increase if name is truncated."+
 			" Values below 50 have no effect.")
@@ -48,19 +46,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	var extraTags []string
-	if *rawTags != "" {
-		extraTags = strings.Split(*rawTags, ",")
-	}
 	logger := getLogger(*debug)
 
 	var formatHandler format.Handler
 	switch *out {
 	case "json":
 		logger.SetFormatter(log.JSONFormatter)
-		formatHandler = &json.Handler{Logger: logger, ExtraTags: extraTags}
+		formatHandler = &json.Handler{Logger: logger}
 	case "short":
-		formatHandler = &short.Handler{Logger: logger, ExtraTags: extraTags}
+		formatHandler = &short.Handler{Logger: logger}
 	case "raw":
 		formatHandler = &raw.Handler{Logger: logger}
 	default:
@@ -71,7 +65,6 @@ func main() {
 		formatHandler = &pretty.Handler{
 			Logger:     logger,
 			Theme:      theme,
-			ExtraTags:  extraTags,
 			NameWidth:  *maxNameWidth,
 			ValueWidth: *maxValueWidth,
 		}
