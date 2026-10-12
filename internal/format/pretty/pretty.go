@@ -23,7 +23,6 @@ func joinTrailing(fields ...string) string {
 type Handler struct {
 	Logger     *log.Logger
 	Theme      *CatppuccinAdaptiveTheme
-	ExtraTags  []string
 	NameWidth  int
 	ValueWidth int
 }
@@ -39,7 +38,7 @@ func (h *Handler) New() messages.OutputHandler {
 			str := h.StyledMetricType(metric)
 			str += h.StyledMetricName(metric, h.NameWidth)
 			str += h.StyledMetricValue(metric, h.ValueWidth)
-			str += h.StyledTags(metric.Tags, h.ExtraTags)
+			str += h.StyledTags(metric.Tags)
 			fmt.Println(str)
 
 		case messages.ServiceCheckMessageType:
@@ -52,7 +51,7 @@ func (h *Handler) New() messages.OutputHandler {
 			str += joinTrailing(
 				h.StyledServiceCheckHostname(sc),
 				h.StyledServiceCheckMessage(sc),
-				h.StyledTags(sc.Tags, h.ExtraTags),
+				h.StyledTags(sc.Tags),
 			)
 			fmt.Println(str)
 
@@ -65,7 +64,7 @@ func (h *Handler) New() messages.OutputHandler {
 			str += h.StyledEventTitle(ev, h.NameWidth)
 			str += joinTrailing(
 				h.StyledEventText(ev),
-				h.StyledTags(ev.Tags, h.ExtraTags),
+				h.StyledTags(ev.Tags),
 			)
 			fmt.Println(str)
 		}
@@ -74,10 +73,10 @@ func (h *Handler) New() messages.OutputHandler {
 	}
 }
 
-// StyledTags renders extra tags + metric tags in a muted italic style with automatic spacing.
-func (h *Handler) StyledTags(tags []string, extraTags []string) string {
+// StyledTags renders message tags in a muted italic style with automatic spacing.
+func (h *Handler) StyledTags(tags []string) string {
 	style := lipgloss.NewStyle().
 		Foreground(h.Theme.Overlay0()).
 		Italic(true)
-	return style.SetString(append(extraTags, tags...)...).Render()
+	return style.SetString(tags...).Render()
 }

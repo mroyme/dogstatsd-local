@@ -29,7 +29,7 @@ docker run -it -e "TERM=$TERM" -p 8125:8125/udp ghcr.io/mroyme/dogstatsd-local
 Pass CLI flags via the command:
 
 ```bash
-docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json -tags env:dev
+docker run -it -e "TERM=$TERM" -p 8125:8125/udp mroyme/dogstatsd-local -out json
 ```
 
 ## Prebuilt Binaries
