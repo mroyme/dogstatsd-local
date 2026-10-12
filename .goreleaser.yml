@@ -126,12 +126,22 @@ homebrew_casks:
           owner: mroyme
           name: homebrew-tap
           branch: main
-    hooks:
-      post:
-        install: |-
+    # Use declarative hooks where available until GoReleaser v2.19 is released.
+    custom_block: |
+      # Older Homebrew reports unknown DSL methods through respond_to?.
+      if self.class.method_defined?(:postflight_steps)
+        postflight_steps do
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/dogstatsd-local"]
+          end
+        end
+      else
+        method(:postflight).call do
           if OS.mac?
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/dogstatsd-local"]
           end
+        end
+      end
 
 # https://goreleaser.com/customization/publish/changelog
 changelog:
