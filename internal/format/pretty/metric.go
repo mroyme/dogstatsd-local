@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
+	"github.com/mroyme/dogstatsd-local/v2/internal/messages"
 )
 
 func (h *Handler) StyledMetricType(metric messages.DogStatsDMetric) string {

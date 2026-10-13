@@ -1,4 +1,4 @@
-module github.com/mroyme/dogstatsd-local
+module github.com/mroyme/dogstatsd-local/v2
 
 go 1.27.0
 

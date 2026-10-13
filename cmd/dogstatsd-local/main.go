@@ -10,14 +10,14 @@ import (
 
 	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/log"
-	"github.com/mroyme/dogstatsd-local/internal/format"
-	"github.com/mroyme/dogstatsd-local/internal/format/json"
-	"github.com/mroyme/dogstatsd-local/internal/format/pretty"
-	"github.com/mroyme/dogstatsd-local/internal/format/raw"
-	"github.com/mroyme/dogstatsd-local/internal/format/short"
-	"github.com/mroyme/dogstatsd-local/internal/forwarder"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
-	"github.com/mroyme/dogstatsd-local/internal/server"
+	"github.com/mroyme/dogstatsd-local/v2/internal/format"
+	"github.com/mroyme/dogstatsd-local/v2/internal/format/json"
+	"github.com/mroyme/dogstatsd-local/v2/internal/format/pretty"
+	"github.com/mroyme/dogstatsd-local/v2/internal/format/raw"
+	"github.com/mroyme/dogstatsd-local/v2/internal/format/short"
+	"github.com/mroyme/dogstatsd-local/v2/internal/forwarder"
+	"github.com/mroyme/dogstatsd-local/v2/internal/messages"
+	"github.com/mroyme/dogstatsd-local/v2/internal/server"
 )
 
 var (

@@ -2,7 +2,7 @@ package pretty
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
+	"github.com/mroyme/dogstatsd-local/v2/internal/messages"
 )
 
 func (h *Handler) StyledEventAlertType(ev messages.DogStatsDEvent) string {

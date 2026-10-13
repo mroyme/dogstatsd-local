@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
+	"github.com/mroyme/dogstatsd-local/v2/internal/messages"
 )
 
 // joinTrailing joins non-empty styled fields with spaces.
