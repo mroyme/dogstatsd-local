@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
-	"github.com/mroyme/dogstatsd-local/internal/messages"
+	"github.com/mroyme/dogstatsd-local/v2/internal/messages"
 )
 
 type Handler struct {

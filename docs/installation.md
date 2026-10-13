@@ -9,7 +9,7 @@ brew install mroyme/tap/dogstatsd-local
 ## Go
 
 ```bash
-go install github.com/mroyme/dogstatsd-local/cmd/dogstatsd-local@latest
+go install github.com/mroyme/dogstatsd-local/v2/cmd/dogstatsd-local@latest
 ```
 
 ## Docker
