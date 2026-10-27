@@ -1,7 +1,7 @@
 [project]
 site_name = "dogstatsd-local"
 site_description = "A local DogStatsD protocol inspector for debugging metrics, service checks, and events"
-site_url = "https://mroyme.github.io/dogstatsd-local/"
+site_url = "https://dogstatsd.mroy.dev/"
 repo_name = "mroyme/dogstatsd-local"
 repo_url = "https://github.com/mroyme/dogstatsd-local"
 copyright = "Copyright &copy; 2026 Madhurjya Roy"
