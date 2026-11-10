@@ -8,7 +8,7 @@
 > A local DogStatsD protocol inspector for debugging metrics, service checks, and events
 
 > [!TIP]
-> Full documentation available [here](https://mroyme.github.io/dogstatsd-local/)
+> Full documentation available [here](https://dogstatsd.mroy.dev/)
 
 ## Features
 
@@ -75,7 +75,7 @@ printf "_e{21,21}:An exception occurred|Cannot parse CSV file|t:warning|#err_typ
 
 ### Pretty (default)
 
-![Pretty format output](https://mroyme.github.io/dogstatsd-local/assets/pretty-format.png)
+![Pretty format output](https://dogstatsd.mroy.dev/assets/pretty-format.png)
 
 ### JSON
 
@@ -124,15 +124,15 @@ All datagrams are forwarded as-is — no modification, no data loss.
 
 ## Documentation
 
-Full documentation is available at [mroyme.github.io/dogstatsd-local](https://mroyme.github.io/dogstatsd-local/).
+Full documentation is available at [dogstatsd.mroy.dev](https://dogstatsd.mroy.dev/).
 
-- [Installation](https://mroyme.github.io/dogstatsd-local/installation/)
-- [Configuration](https://mroyme.github.io/dogstatsd-local/configuration/)
-- [Connecting Your Service](https://mroyme.github.io/dogstatsd-local/connecting/)
-- [Output Formats](https://mroyme.github.io/dogstatsd-local/output-formats/)
-- [Forwarding](https://mroyme.github.io/dogstatsd-local/forwarding/)
-- [Protocol Reference](https://mroyme.github.io/dogstatsd-local/protocol/)
-- [Contributing](https://mroyme.github.io/dogstatsd-local/contributing/)
+- [Installation](https://dogstatsd.mroy.dev/installation/)
+- [Configuration](https://dogstatsd.mroy.dev/configuration/)
+- [Connecting Your Service](https://dogstatsd.mroy.dev/connecting/)
+- [Output Formats](https://dogstatsd.mroy.dev/output-formats/)
+- [Forwarding](https://dogstatsd.mroy.dev/forwarding/)
+- [Protocol Reference](https://dogstatsd.mroy.dev/protocol/)
+- [Contributing](https://dogstatsd.mroy.dev/contributing/)
 
 ## Acknowledgments
 
